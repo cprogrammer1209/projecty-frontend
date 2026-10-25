@@ -76,6 +76,14 @@ export class AuthService {
     return this.refreshInFlight;
   }
 
+  /** Sets or clears (null) the personal time zone. */
+  updatePreferences(timeZone: string | null): Observable<Me> {
+    return this.http.patch<AppResponse<Me>>('/api/me/preferences', { timeZone }).pipe(
+      unwrap(),
+      tap((me) => this.currentUser.set(me)),
+    );
+  }
+
   loadMe(): Observable<Me> {
     return this.http.get<AppResponse<Me>>('/api/me').pipe(
       unwrap(),

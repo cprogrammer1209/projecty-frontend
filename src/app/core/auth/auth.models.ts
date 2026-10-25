@@ -15,6 +15,8 @@ export interface Me {
   id: string;
   email: string;
   fullName: string;
+  /** Personal time zone (PTL-US-12); null means "use the portal's". */
+  timeZone: string | null;
   portals: PortalMembership[];
 }
 

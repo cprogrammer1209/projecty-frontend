@@ -92,3 +92,30 @@ button { font: inherit; }
 .rule py-icon { width: 14px; height: 14px; }
 .rule.is-met { color: var(--py-ink); }
 .rule.is-met py-icon { color: var(--py-status-done); }
+
+/* Dropdown menu (portal switcher, user menu) */
+.py-menu { position: absolute; z-index: 30; left: 0; right: 0; background: var(--py-surface-0); border: 1px solid var(--py-border); border-radius: 9px; box-shadow: var(--py-shadow-lg); padding: 6px; }
+.py-menu--down { top: calc(100% + 6px); }
+.py-menu--up { bottom: calc(100% + 6px); }
+.py-menu-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--py-ink-muted); padding: 6px 8px; }
+.py-menu-item { width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px; border: 0; border-radius: 6px; background: none; color: var(--py-ink); font: 500 12px/1.3 var(--py-font-ui); text-align: left; cursor: pointer; text-decoration: none; }
+.py-menu-item:hover, .py-menu-item.current { background: var(--py-surface-1); text-decoration: none; }
+.py-menu-item py-icon { color: var(--py-ink-muted); }
+.py-menu-item.current py-icon { color: var(--py-brand); }
+.py-menu-sep { height: 1px; background: var(--py-border); margin: 6px 0; }
+
+/* Initials tile (portals) and avatar (people) */
+.py-tile { width: 30px; height: 30px; flex-shrink: 0; display: grid; place-items: center; border-radius: 7px; background: var(--py-brand-subtle); color: var(--py-brand); font: 600 12px/1 var(--py-font-ui); }
+.py-tile--sm { width: 26px; height: 26px; font-size: 10px; }
+.py-avatar { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: #e7d9ca; color: #62432b; font: 600 11px/1 var(--py-font-ui); }
+.py-avatar--sm { width: 28px; height: 28px; }
+
+/* Native select styled like an input */
+.py-select {
+  height: var(--py-control-h); padding: 0 var(--py-space-3); width: 100%;
+  border: 1px solid var(--py-border-control); border-radius: var(--py-radius-md);
+  background: var(--py-surface-0); color: var(--py-ink); font: 400 14px/20px var(--py-font-ui);
+}
+.py-select:focus { outline: 0; border-color: var(--py-brand); box-shadow: 0 0 0 1px var(--py-brand); }
+.py-select:disabled { background: var(--py-surface-1); color: var(--py-ink-muted); }
+.py-field.is-invalid .py-select { border-color: var(--py-status-blocked); }

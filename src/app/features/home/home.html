@@ -1,0 +1,54 @@
+<section class="page-head">
+  <div>
+    <div class="eyebrow">{{ now | pyDate: 'EEEE' }} · {{ now | pyDate }}</div>
+    <h1>{{ greeting() }}</h1>
+    <p>Here’s what’s happening in {{ active.portal()?.name }} today.</p>
+  </div>
+</section>
+
+<section class="stats" aria-label="Workspace summary">
+  @for (stat of stats; track stat.label) {
+    <div class="stat">
+      <div class="stat-label"><span class="stat-icon"><py-icon [name]="stat.icon" /></span>{{ stat.label }}</div>
+      <div class="stat-value">—</div>
+      <div class="stat-foot">Arrives with Projects</div>
+    </div>
+  }
+</section>
+
+<div class="grid">
+  <div class="stack">
+    <section class="panel">
+      <div class="panel-head"><div><h2>My tasks</h2><p>Your next steps, all in one place</p></div></div>
+      <div class="empty">No tasks yet. Tasks arrive with Projects in the next milestone.</div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2>Projects</h2><p>Progress across your active projects</p></div></div>
+      <div class="empty">No projects yet.</div>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section class="panel">
+      <div class="panel-head"><div><h2>Today’s agenda</h2><p>{{ now | pyDate: 'EEEE, MMMM d' }}</p></div></div>
+      <div class="empty">Nothing scheduled.</div>
+    </section>
+    <section class="panel">
+      <div class="panel-head">
+        <div><h2>Portal settings</h2><p>How dates and money show for everyone</p></div>
+        @if (active.portal()?.canManageSettings) {
+          <a class="text-btn" [routerLink]="['/p', active.portal()?.slug, 'settings']">Edit →</a>
+        }
+      </div>
+      @if (active.portal(); as p) {
+        <dl class="facts">
+          <div><dt>Time zone</dt><dd>{{ p.timeZone }}</dd></div>
+          <div><dt>Your time zone</dt><dd>{{ auth.me()?.timeZone ?? 'Portal default' }}</dd></div>
+          <div><dt>Date format</dt><dd>{{ now | pyDate }}</dd></div>
+          <div><dt>Currency</dt><dd>{{ p.currency }}</dd></div>
+          <div><dt>Week starts</dt><dd>{{ weekStartLabel(p.weekStart) }}</dd></div>
+        </dl>
+      }
+    </section>
+  </div>
+</div>

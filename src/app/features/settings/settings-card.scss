@@ -1,0 +1,12 @@
+.card { max-width: 640px; background: var(--py-surface-0); border: 1px solid var(--py-border); border-radius: 10px; padding: 22px; }
+.card h2 { font: 600 15px/22px var(--py-font-ui); margin: 0 0 4px; }
+.card > p { color: var(--py-ink-muted); font-size: 13px; margin: 0 0 20px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.full { grid-column: 1 / -1; }
+.preview { font-size: 12px; color: var(--py-ink-muted); }
+.preview strong { color: var(--py-ink); font-weight: 500; }
+.warning { margin-top: 16px; padding: 10px 12px; border-radius: 7px; font-size: 12px; line-height: 1.5;
+  background: color-mix(in srgb, var(--py-accent) 14%, var(--py-surface-0)); border: 1px solid color-mix(in srgb, var(--py-accent) 45%, var(--py-border)); }
+.foot { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
+.saved { font-size: 12px; color: var(--py-status-done); }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }

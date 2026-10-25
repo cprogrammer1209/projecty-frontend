@@ -1,0 +1,88 @@
+<div class="app" [class.sidebar-open]="sidebarOpen()">
+  <aside class="sidebar">
+    <a class="brand" [routerLink]="['/p', active.portal()?.slug]" aria-label="ProjectY home">
+      <span class="mark"><svg viewBox="0 0 32 32"><path d="M7 7 16 17 25 7M16 17V27" /><circle cx="16" cy="17" r="4" /></svg></span>
+      <span class="brand-name">ProjectY</span>
+    </a>
+
+    <div class="portal-wrap">
+      <button class="portal" type="button" aria-haspopup="menu" [attr.aria-expanded]="switcherOpen()" (click)="toggleSwitcher($event)">
+        <span class="py-tile">{{ initials(active.portal()?.name ?? '') }}</span>
+        <span class="portal-copy">
+          <strong>{{ active.portal()?.name }}</strong>
+          <small>{{ profileLabel(active.portal()?.profile) }}</small>
+        </span>
+        <py-icon name="chevrons" />
+      </button>
+      @if (switcherOpen()) {
+        <div class="py-menu py-menu--down" role="menu" (click)="$event.stopPropagation()">
+          <div class="py-menu-label">Your portals</div>
+          @for (p of auth.me()?.portals ?? []; track p.id) {
+            <button type="button" role="menuitem" class="py-menu-item" [class.current]="p.id === active.portalId()" (click)="switchTo(p.slug)">
+              <span class="py-tile py-tile--sm">{{ initials(p.name) }}</span>
+              <span class="menu-copy"><strong>{{ p.name }}</strong><small>{{ p.slug }}.projecty.app</small></span>
+              @if (p.id === active.portalId()) { <py-icon name="check" /> }
+            </button>
+          }
+          <div class="py-menu-sep"></div>
+          <a class="py-menu-item" role="menuitem" routerLink="/portals/new"><py-icon name="plus" />Create a portal</a>
+        </div>
+      }
+    </div>
+
+    <div class="nav-group">
+      <div class="section-label">Workspace</div>
+      <nav class="nav" aria-label="Main navigation">
+        <a [routerLink]="['/p', active.portal()?.slug]" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <py-icon name="home" /><span class="nav-label">Home</span>
+        </a>
+        @for (item of comingLater; track item.label) {
+          <button type="button" disabled title="Coming with Projects (M1)"><py-icon [name]="item.icon" /><span class="nav-label">{{ item.label }}</span></button>
+        }
+      </nav>
+    </div>
+    <div class="nav-group">
+      <div class="section-label">Personal</div>
+      <nav class="nav">
+        <button type="button" disabled title="Coming with Documents (M1)"><py-icon name="file" /><span class="nav-label">Documents</span></button>
+      </nav>
+    </div>
+
+    <div class="side-bottom">
+      <nav class="nav">
+        <a [routerLink]="['/p', active.portal()?.slug, 'settings']" routerLinkActive="active"><py-icon name="settings" /><span class="nav-label">Settings</span></a>
+      </nav>
+      <div class="user">
+        <span class="py-avatar">{{ initials(auth.me()?.fullName ?? '') }}</span>
+        <span class="user-copy"><strong>{{ auth.me()?.fullName }}</strong><small>{{ auth.me()?.email }}</small></span>
+        <button class="icon-btn" type="button" aria-label="User menu" aria-haspopup="menu" [attr.aria-expanded]="userMenuOpen()" (click)="toggleUserMenu($event)"><py-icon name="chevrons" /></button>
+        @if (userMenuOpen()) {
+          <div class="py-menu py-menu--up" role="menu" (click)="$event.stopPropagation()">
+            <a class="py-menu-item" role="menuitem" [routerLink]="['/p', active.portal()?.slug, 'settings', 'preferences']" (click)="closeMenus()"><py-icon name="globe" />My preferences</a>
+            <button class="py-menu-item" type="button" role="menuitem" (click)="signOut()"><py-icon name="log-out" />Sign out</button>
+          </div>
+        }
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn mobile-menu" type="button" aria-label="Toggle sidebar" (click)="sidebarOpen.set(!sidebarOpen())"><py-icon name="layers" /></button>
+      <div class="crumb">{{ active.portal()?.name }} <span class="sep">/</span> <b>{{ crumb() }}</b></div>
+      <label class="search" title="Search arrives with Projects (M1)">
+        <py-icon name="search" /><input placeholder="Search tasks, projects..." aria-label="Search" disabled /><span class="kbd">⌘ K</span>
+      </label>
+      <button class="icon-btn" type="button" aria-label="Notifications" title="Notifications arrive in M1" disabled><py-icon name="bell" /></button>
+      <button class="icon-btn" type="button" [attr.aria-label]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'" (click)="theme.toggle()">
+        <py-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" />
+      </button>
+      <span class="py-avatar py-avatar--sm" [title]="auth.me()?.email ?? ''">{{ initials(auth.me()?.fullName ?? '') }}</span>
+    </header>
+    <div class="content">
+      @if (active.portal()) {
+        <router-outlet />
+      }
+    </div>
+  </main>
+</div>

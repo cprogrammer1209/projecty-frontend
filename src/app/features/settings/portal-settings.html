@@ -1,0 +1,50 @@
+<section class="card">
+  <h2>Regional settings</h2>
+  <p>Dates are stored in UTC and shown in each person's time zone, or this one if they haven't set their own.</p>
+
+  @if (!portal()?.canManageSettings) {
+    <div class="py-alert" role="status"><py-icon name="alert" /><span>Only the portal owner can change these settings.</span></div>
+  }
+  @if (error(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="grid">
+      <py-field label="Time zone" for="ps-tz" [error]="form.controls.timeZone.errors?.['server'] ?? null">
+        <select id="ps-tz" class="py-select" formControlName="timeZone">
+          @for (zone of timeZones; track zone) { <option [value]="zone">{{ zone }}</option> }
+        </select>
+      </py-field>
+      <py-field label="Date format" for="ps-format" [error]="form.controls.dateFormat.errors?.['server'] ?? null">
+        <select id="ps-format" class="py-select" formControlName="dateFormat">
+          @for (f of dateFormats; track f) { <option [value]="f">{{ formatSample(f) }}</option> }
+        </select>
+      </py-field>
+      <py-field label="Currency" for="ps-currency" [error]="form.controls.currency.errors?.['server'] ?? null">
+        <select id="ps-currency" class="py-select" formControlName="currency">
+          @for (c of currencies; track c.code) { <option [value]="c.code">{{ c.label }}</option> }
+        </select>
+      </py-field>
+      <py-field label="Week starts on" for="ps-week">
+        <select id="ps-week" class="py-select" formControlName="weekStart">
+          @for (w of weekStarts; track w.value) { <option [value]="w.value">{{ w.label }}</option> }
+        </select>
+      </py-field>
+      <p class="preview full">Right now in this portal: <strong>{{ preview() }}</strong></p>
+    </div>
+
+    @if (portal()?.canManageSettings && currencyChanged()) {
+      <div class="warning">Changing the currency doesn't convert amounts already entered. The change is recorded in the audit log.</div>
+    }
+
+    @if (portal()?.canManageSettings) {
+      <div class="foot">
+        <button class="py-btn py-btn--primary" type="submit" [disabled]="busy() || form.pristine">
+          @if (busy()) { <span class="py-spinner" aria-hidden="true"></span>Saving } @else { Save changes }
+        </button>
+        @if (saved()) { <span class="saved" role="status">Saved</span> }
+      </div>
+    }
+  </form>
+</section>

@@ -1,5 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { map } from 'rxjs';
+
+import { ActivePortalService } from '../portal/active-portal.service';
 
 import { AuthService } from './auth.service';
 
@@ -13,4 +16,13 @@ export const authGuard: CanActivateFn = () => {
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   return !auth.isAuthenticated() || inject(Router).parseUrl(auth.landingUrl());
+};
+
+/** /p/{slug}: makes that portal active, or shows "portal not found" if the user isn't in it. */
+export const portalGuard: CanActivateFn = (route) => {
+  const router = inject(Router);
+  const slug = route.paramMap.get('slug') ?? '';
+  return inject(ActivePortalService)
+    .activate(slug)
+    .pipe(map((ok) => ok || router.parseUrl('/portal-not-found')));
 };

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestGuard } from './core/auth/auth.guards';
+import { authGuard, guestGuard, portalGuard } from './core/auth/auth.guards';
 import { AuthLayout } from './features/auth/layout/auth-layout';
 
 const TITLE_SUFFIX = ' · ProjectY';
@@ -70,6 +70,13 @@ export const routes: Routes = [
           import('./features/auth/portal-picker/portal-picker').then((m) => m.PortalPicker),
       },
       {
+        path: 'portal-not-found',
+        title: 'Portal not found' + TITLE_SUFFIX,
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/auth/portal-not-found/portal-not-found').then((m) => m.PortalNotFound),
+      },
+      {
         path: 'portals/new',
         title: 'Set up your portal' + TITLE_SUFFIX,
         canActivate: [authGuard],
@@ -81,10 +88,35 @@ export const routes: Routes = [
   },
   {
     path: 'p/:slug',
-    title: 'ProjectY',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/home/placeholder-home/placeholder-home').then((m) => m.PlaceholderHome),
+    canActivate: [authGuard, portalGuard],
+    loadComponent: () => import('./features/shell/portal-shell').then((m) => m.PortalShell),
+    children: [
+      {
+        path: '',
+        title: 'Home' + TITLE_SUFFIX,
+        data: { crumb: 'Home' },
+        loadComponent: () => import('./features/home/home').then((m) => m.Home),
+      },
+      {
+        path: 'settings',
+        title: 'Settings' + TITLE_SUFFIX,
+        data: { crumb: 'Settings' },
+        loadComponent: () => import('./features/settings/settings-page').then((m) => m.SettingsPage),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'portal' },
+          {
+            path: 'portal',
+            data: { crumb: 'Settings' },
+            loadComponent: () => import('./features/settings/portal-settings').then((m) => m.PortalSettings),
+          },
+          {
+            path: 'preferences',
+            data: { crumb: 'My preferences' },
+            loadComponent: () => import('./features/settings/my-preferences').then((m) => m.MyPreferences),
+          },
+        ],
+      },
+    ],
   },
   { path: '**', redirectTo: 'sign-in' },
 ];
