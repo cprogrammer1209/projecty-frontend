@@ -1,0 +1,47 @@
+<py-stepper [step]="1" label="Your account" />
+
+<section aria-labelledby="signup-title">
+  <div class="py-view-head">
+    <h1 class="py-title" id="signup-title">Create your ProjectY account</h1>
+    <p class="py-body">Next, you'll confirm your email and set up your portal.</p>
+  </div>
+
+  @if (alert(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+
+  <form class="py-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <py-field label="Full name" for="su-name" [error]="nameError()">
+      <div class="py-input-wrap">
+        <input id="su-name" type="text" formControlName="fullName" autocomplete="name"
+               [attr.aria-invalid]="!!nameError()" [attr.aria-describedby]="nameError() ? 'su-name-error' : null" />
+      </div>
+    </py-field>
+
+    <py-field label="Work email" for="su-email" [error]="emailError()">
+      <div class="py-input-wrap">
+        <input id="su-email" type="email" formControlName="email" autocomplete="email" placeholder="name@company.com"
+               [attr.aria-invalid]="!!emailError()" [attr.aria-describedby]="emailError() ? 'su-email-error' : null" />
+      </div>
+      @if (emailTaken()) {
+        <p class="py-field__hint"><a routerLink="/sign-in">Sign in instead</a> or <a routerLink="/forgot-password">reset your password</a>.</p>
+      }
+    </py-field>
+
+    <py-field label="Password" for="su-password" [error]="passwordError()">
+      <py-password-input inputId="su-password" formControlName="password" autocomplete="new-password"
+                         [invalid]="!!passwordError()" describedBy="su-password-rules" />
+      <div class="rules" id="su-password-rules" aria-live="polite">
+        <span class="rule" [class.is-met]="lengthMet()">
+          <py-icon [name]="lengthMet() ? 'check' : 'dot'" />{{ minLength }}+ characters
+        </span>
+      </div>
+    </py-field>
+
+    <button class="py-btn py-btn--primary py-btn--block" type="submit" [disabled]="busy()">
+      @if (busy()) { <span class="py-spinner" aria-hidden="true"></span>Creating account } @else { Continue }
+    </button>
+  </form>
+
+  <p class="py-switch">Already have an account? <a routerLink="/sign-in">Sign in</a></p>
+</section>

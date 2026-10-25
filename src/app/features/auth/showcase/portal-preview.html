@@ -1,0 +1,33 @@
+<div class="copy">
+  <h2 class="py-display">Your portal, set up in a minute.</h2>
+  <p class="py-body">This is what your team sees when they sign in. It fills in as you type.</p>
+</div>
+
+<div class="preview">
+  <div class="preview__top">
+    <div class="preview__portal">
+      <span class="preview__tile">{{ tile() }}</span>
+      <span class="preview__pname">{{ portalName() }}</span>
+    </div>
+    <div class="preview__search"><span>Search</span><span class="preview__kbd">⌘K</span></div>
+    <span class="preview__avatar">{{ avatar() }}</span>
+  </div>
+  <div class="preview__body">
+    <nav class="preview__side">
+      @for (item of nav; track item.label; let first = $first) {
+        <span class="preview__nav" [class.preview__nav--active]="first"><py-icon [name]="item.icon" />{{ item.label }}</span>
+      }
+    </nav>
+    <div class="preview__main">
+      <div>
+        <div class="preview__greet">{{ greeting() }}</div>
+        <div class="preview__url">{{ url() }}</div>
+      </div>
+      <div>
+        @for (width of skeletonWidths; track $index) {
+          <div class="preview__row"><span class="box"></span><div class="skel" [style.width.%]="width"></div></div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

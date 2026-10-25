@@ -1,0 +1,76 @@
+/* ProjectY design tokens. Light is default; dark follows the OS, or data-theme="light"|"dark" on <html> forces one. */
+:root {
+  --py-surface-0:#FFFFFF; --py-surface-1:#F6F7F9; --py-surface-2:#EEF0F3;
+  --py-border:#E3E6EB; --py-border-control:#7D8696;
+  --py-ink:#14161A; --py-ink-muted:#5B6270;
+  --py-brand:#2A5BD7; --py-brand-hover:#2149B8; --py-brand-subtle:#EBF0FD; --py-on-brand:#FFFFFF;
+  --py-accent:#FFB547; --py-on-accent:#14161A; --py-focus-ring:var(--py-brand);
+  --py-status-open:#5B6270; --py-status-progress:#2A5BD7; --py-status-review:#A44A06; --py-status-done:#127235; --py-status-blocked:#C2261C;
+  --py-shadow-sm:0 1px 2px rgba(20,22,26,0.06);
+  --py-shadow-md:0 4px 12px rgba(20,22,26,0.08), 0 1px 3px rgba(20,22,26,0.06);
+  --py-shadow-lg:0 16px 40px rgba(20,22,26,0.14);
+  --py-font-ui:'Inter', system-ui, sans-serif; --py-font-mono:'JetBrains Mono', ui-monospace, monospace;
+  --py-space-1:4px; --py-space-2:8px; --py-space-3:12px; --py-space-4:16px; --py-space-6:24px; --py-space-8:32px;
+  --py-radius-sm:4px; --py-radius-md:6px; --py-radius-lg:10px; --py-radius-full:999px;
+  --py-control-h:32px; --py-control-h-compact:28px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --py-surface-0:#0E0F12; --py-surface-1:#15171C; --py-surface-2:#1C1F26;
+    --py-border:#2A2E37; --py-border-control:#687083;
+    --py-ink:#ECEEF2; --py-ink-muted:#9AA1AE;
+    --py-brand:#7C9BFF; --py-brand-hover:#9AB2FF; --py-brand-subtle:#1A2442; --py-on-brand:#0E0F12;
+    --py-status-open:#9AA1AE; --py-status-progress:#7C9BFF; --py-status-review:#FFB547; --py-status-done:#4ADE80; --py-status-blocked:#F87171;
+    --py-shadow-sm:0 1px 2px rgba(0,0,0,0.4);
+    --py-shadow-md:0 4px 12px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4);
+    --py-shadow-lg:0 16px 40px rgba(0,0,0,0.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"] {
+  --py-surface-0:#0E0F12; --py-surface-1:#15171C; --py-surface-2:#1C1F26;
+  --py-border:#2A2E37; --py-border-control:#687083;
+  --py-ink:#ECEEF2; --py-ink-muted:#9AA1AE;
+  --py-brand:#7C9BFF; --py-brand-hover:#9AB2FF; --py-brand-subtle:#1A2442; --py-on-brand:#0E0F12;
+  --py-status-open:#9AA1AE; --py-status-progress:#7C9BFF; --py-status-review:#FFB547; --py-status-done:#4ADE80; --py-status-blocked:#F87171;
+  --py-shadow-sm:0 1px 2px rgba(0,0,0,0.4);
+  --py-shadow-md:0 4px 12px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4);
+  --py-shadow-lg:0 16px 40px rgba(0,0,0,0.6);
+  color-scheme:dark;
+}
+/* Text styles */
+.py-display{font:600 32px/40px var(--py-font-ui);letter-spacing:-0.02em}
+.py-title{font:600 20px/28px var(--py-font-ui);letter-spacing:-0.01em}
+.py-heading{font:600 15px/22px var(--py-font-ui)}
+.py-body{font:400 14px/20px var(--py-font-ui)}
+.py-label{font:500 13px/18px var(--py-font-ui)}
+.py-caption{font:500 12px/16px var(--py-font-ui);color:var(--py-ink-muted)}
+.py-id{font:500 12px/16px var(--py-font-mono)}
+.py-code{font:400 13px/20px var(--py-font-mono)}
+/* Base */
+html,body{background:var(--py-surface-0);color:var(--py-ink);font:400 14px/20px var(--py-font-ui);-webkit-font-smoothing:antialiased}
+a{color:var(--py-brand)} a:hover{color:var(--py-brand-hover)}
+:focus-visible{outline:2px solid var(--py-focus-ring);outline-offset:2px}
+/* Buttons */
+.py-btn{height:var(--py-control-h);padding:0 12px;border-radius:var(--py-radius-md);font:500 13px/18px var(--py-font-ui);border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.py-btn--primary{background:var(--py-brand);color:var(--py-on-brand)} .py-btn--primary:hover{background:var(--py-brand-hover)}
+.py-btn--secondary{background:var(--py-surface-0);color:var(--py-ink);border-color:var(--py-border-control)} .py-btn--secondary:hover{background:var(--py-surface-2)}
+.py-btn--ghost{background:transparent;color:var(--py-ink)} .py-btn--ghost:hover{background:var(--py-surface-2)}
+.py-btn--danger{background:var(--py-status-blocked);color:var(--py-on-brand)}
+.py-btn--block{width:100%;justify-content:center}
+.py-btn--icon{width:var(--py-control-h);padding:0;justify-content:center}
+.py-btn py-icon{width:16px;height:16px}
+.py-spinner{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:py-spin .7s linear infinite}
+@keyframes py-spin{to{transform:rotate(360deg)}}
+.py-btn:disabled{background:var(--py-surface-2);color:var(--py-ink-muted);border-color:transparent;cursor:not-allowed}
+/* Input */
+.py-input{height:var(--py-control-h);padding:0 10px;border-radius:var(--py-radius-md);border:1px solid var(--py-border-control);background:var(--py-surface-0);color:var(--py-ink);font:400 14px/20px var(--py-font-ui)}
+.py-input:focus{outline:2px solid var(--py-focus-ring);outline-offset:2px}
+.py-input[aria-invalid="true"]{border-color:var(--py-status-blocked)}
+/* Status pill: icon + label, never a solid fill */
+.py-pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border:1px solid var(--py-border);border-radius:var(--py-radius-sm);background:var(--py-surface-1);font:500 12px/16px var(--py-font-ui)}
+.py-pill--open{color:var(--py-status-open)} .py-pill--progress{color:var(--py-status-progress)} .py-pill--review{color:var(--py-status-review)} .py-pill--done{color:var(--py-status-done)} .py-pill--blocked{color:var(--py-status-blocked)}
+/* Card */
+.py-card{background:var(--py-surface-0);border:1px solid var(--py-border);border-radius:var(--py-radius-lg);padding:var(--py-space-4)}
+.py-card--kanban{box-shadow:var(--py-shadow-sm);padding:var(--py-space-3)}

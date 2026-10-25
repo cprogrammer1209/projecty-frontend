@@ -1,0 +1,10 @@
+.slug input, .slug .py-input-wrap__suffix { font: 400 14px/20px var(--py-font-mono); }
+
+.suggestions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--py-space-2); }
+.suggestion {
+  height: 24px; padding: 0 var(--py-space-2);
+  border: 1px solid var(--py-border-control); border-radius: var(--py-radius-full);
+  background: var(--py-surface-0); color: var(--py-ink); cursor: pointer;
+  font: 500 12px/16px var(--py-font-mono);
+}
+.suggestion:hover { background: var(--py-surface-2); }

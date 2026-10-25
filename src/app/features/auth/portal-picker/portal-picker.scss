@@ -1,0 +1,18 @@
+.portals { display: flex; flex-direction: column; border: 1px solid var(--py-border); border-radius: var(--py-radius-lg); overflow: hidden; }
+.portal {
+  display: flex; align-items: center; gap: var(--py-space-3);
+  padding: var(--py-space-3) var(--py-space-4); background: var(--py-surface-0);
+  border: 0; border-bottom: 1px solid var(--py-border); text-align: left; cursor: pointer; color: var(--py-ink);
+}
+.portal:last-child { border-bottom: 0; }
+.portal:hover { background: var(--py-surface-2); }
+.portal:focus-visible { outline-offset: -2px; border-radius: 0; }
+.portal py-icon { color: var(--py-ink-muted); }
+.portal__tile {
+  width: 32px; height: 32px; border-radius: var(--py-radius-md); display: grid; place-items: center; flex-shrink: 0;
+  background: var(--py-surface-2); color: var(--py-ink); font: 600 13px/1 var(--py-font-ui);
+}
+.portal__meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.portal__name { font: 500 13px/18px var(--py-font-ui); }
+.actions { display: flex; justify-content: space-between; margin-top: var(--py-space-4); }
+.actions a:hover { text-decoration: none; }

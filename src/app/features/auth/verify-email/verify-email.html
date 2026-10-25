@@ -1,0 +1,32 @@
+<section aria-labelledby="verify-title" aria-live="polite">
+  @switch (state()) {
+    @case ('verifying') {
+      <div class="py-view-head">
+        <h1 class="py-title" id="verify-title">Confirming your email…</h1>
+        <p class="py-body">This takes a second.</p>
+      </div>
+    }
+    @case ('verified') {
+      <div class="py-badge-icon"><py-icon name="check" /></div>
+      <div class="py-view-head">
+        <h1 class="py-title" id="verify-title">Email confirmed</h1>
+        <p class="py-body">Your account is ready. Sign in to set up your portal.</p>
+      </div>
+      <a class="py-btn py-btn--primary py-btn--block" routerLink="/sign-in">Sign in</a>
+    }
+    @case ('expired') {
+      <div class="py-view-head">
+        <h1 class="py-title" id="verify-title">This link has expired</h1>
+        <p class="py-body">Confirmation links work once and last 24 hours. Sign in and we'll offer to send a new one.</p>
+      </div>
+      <a class="py-btn py-btn--primary py-btn--block" routerLink="/sign-in">Go to sign in</a>
+    }
+    @case ('failed') {
+      <div class="py-view-head">
+        <h1 class="py-title" id="verify-title">We couldn't confirm your email</h1>
+      </div>
+      <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message() }}</span></div>
+      <a class="py-btn py-btn--secondary py-btn--block" routerLink="/sign-in">Go to sign in</a>
+    }
+  }
+</section>

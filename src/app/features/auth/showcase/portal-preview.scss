@@ -1,0 +1,40 @@
+:host { display: flex; flex-direction: column; }
+
+.copy { max-width: 440px; margin-bottom: var(--py-space-8); }
+.copy p { margin-top: var(--py-space-3); color: var(--py-ink-muted); max-width: 400px; }
+
+.preview {
+  width: 100%; max-width: 560px; height: 360px;
+  background: var(--py-surface-0); border: 1px solid var(--py-border); border-radius: var(--py-radius-lg);
+  box-shadow: var(--py-shadow-lg); overflow: hidden;
+  display: grid; grid-template-rows: 40px 1fr;
+}
+.preview__top { display: flex; align-items: center; gap: var(--py-space-3); padding: 0 var(--py-space-3); border-bottom: 1px solid var(--py-border); }
+.preview__portal { display: flex; align-items: center; gap: var(--py-space-2); min-width: 0; width: 176px; }
+.preview__tile {
+  width: 20px; height: 20px; border-radius: var(--py-radius-sm); flex-shrink: 0;
+  background: var(--py-brand); color: var(--py-on-brand); display: grid; place-items: center; font: 600 10px/1 var(--py-font-ui);
+}
+.preview__pname { font: 600 13px/18px var(--py-font-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.preview__search {
+  flex: 1; height: 24px; border-radius: var(--py-radius-md); background: var(--py-surface-1); border: 1px solid var(--py-border);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 var(--py-space-2);
+  color: var(--py-ink-muted); font: 500 12px/16px var(--py-font-ui);
+}
+.preview__kbd { font: 500 11px/1 var(--py-font-mono); }
+.preview__avatar {
+  width: 24px; height: 24px; border-radius: var(--py-radius-full); background: var(--py-surface-2); color: var(--py-ink);
+  display: grid; place-items: center; font: 600 10px/1 var(--py-font-ui);
+}
+.preview__body { display: grid; grid-template-columns: 176px 1fr; min-height: 0; }
+.preview__side { background: var(--py-surface-1); border-right: 1px solid var(--py-border); padding: var(--py-space-2); display: flex; flex-direction: column; gap: 2px; }
+.preview__nav { display: flex; align-items: center; gap: var(--py-space-2); height: 28px; padding: 0 var(--py-space-2); border-radius: var(--py-radius-md); font: 500 12px/16px var(--py-font-ui); color: var(--py-ink-muted); }
+.preview__nav py-icon { width: 14px; height: 14px; }
+.preview__nav--active { background: var(--py-brand-subtle); color: var(--py-brand); }
+.preview__main { padding: var(--py-space-4); display: flex; flex-direction: column; gap: var(--py-space-3); }
+.preview__greet { font: 600 15px/22px var(--py-font-ui); }
+.preview__url { font: 500 11px/16px var(--py-font-mono); color: var(--py-ink-muted); }
+.preview__row { display: flex; align-items: center; gap: var(--py-space-2); padding: var(--py-space-2) 0; border-bottom: 1px solid var(--py-border); }
+.preview__row:last-child { border-bottom: 0; }
+.skel { height: 10px; border-radius: var(--py-radius-sm); background: var(--py-surface-2); }
+.box { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--py-status-open); flex-shrink: 0; }

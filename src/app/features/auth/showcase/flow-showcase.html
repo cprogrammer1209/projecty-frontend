@@ -1,0 +1,33 @@
+<div class="copy">
+  <h2 class="py-display">Every task has a reason.<br />Every move has a rule.</h2>
+  <p class="py-body">Blueprints decide which status can follow which, and what has to be true before work moves on.</p>
+</div>
+
+<div class="fork">
+  <svg class="fork__lines" viewBox="0 0 520 170" preserveAspectRatio="xMinYMid meet">
+    <path class="fork__line" d="M80 85 H230" />
+    <path class="fork__line" d="M240 85 C290 85 300 30 360 30 H400" />
+    <path class="fork__line" d="M240 85 C290 85 300 140 360 140 H400" />
+    <path class="fork__line fork__line--taken" d="M80 85 H230 M240 85 C290 85 300 140 360 140 H400" />
+    <circle class="fork__node" cx="240" cy="85" r="9" />
+  </svg>
+  <span class="pill pill--review" style="left: 15.4%; top: 50%"><py-icon name="s-review" />In review</span>
+  <span class="pill pill--progress" style="left: 80%; top: 17.6%"><py-icon name="s-progress" />In progress</span>
+  <span class="pill pill--review" style="left: 80%; top: 82.4%"><py-icon name="s-review" />QA</span>
+</div>
+
+<div class="card">
+  <div class="card__head">
+    <div class="py-heading">Send to QA</div>
+    <div class="card__sub py-caption"><span class="py-id">WEB-1043</span><span>Set up CMS content models</span></div>
+  </div>
+  <div class="card__body">
+    <div class="ci ci--done"><span class="ci__box"><py-icon name="check" /></span>Unit tests passed</div>
+    <div class="ci ci--done"><span class="ci__box"><py-icon name="check" /></span>Code reviewed</div>
+    <div class="ci"><span class="ci__box"></span>Docs updated <span class="ci__opt">Optional</span></div>
+  </div>
+  <div class="card__foot">
+    <span class="py-caption">2 of 2 required items done</span>
+    <span class="py-btn py-btn--primary">Send to QA</span>
+  </div>
+</div>

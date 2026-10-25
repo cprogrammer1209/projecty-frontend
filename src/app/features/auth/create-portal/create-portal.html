@@ -1,0 +1,70 @@
+@if (firstPortal) {
+  <py-stepper [step]="2" label="Your portal" />
+}
+
+<section aria-labelledby="portal-title">
+  <div class="py-view-head">
+    <h1 class="py-title" id="portal-title">Set up your portal</h1>
+    <p class="py-body">A portal is your organization's space. Projects, people and settings live inside it.</p>
+  </div>
+
+  @if (alert(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+
+  <form class="py-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <py-field label="Portal name" for="cp-name" [error]="nameError()">
+      <div class="py-input-wrap">
+        <input id="cp-name" type="text" formControlName="name" autocomplete="organization" placeholder="Northwind Labs"
+               [attr.aria-invalid]="!!nameError()" [attr.aria-describedby]="nameError() ? 'cp-name-error' : null" />
+      </div>
+    </py-field>
+
+    <py-field label="Portal address" for="cp-slug" [error]="slugError()"
+              [hint]="slugStatus().kind === 'idle' ? 'Lowercase letters, numbers and hyphens. You can\'t change this later.' : null">
+      <div class="py-input-wrap slug">
+        <input id="cp-slug" type="text" formControlName="slug" autocomplete="off" spellcheck="false" placeholder="northwind-labs"
+               (input)="onSlugTyped()" [attr.aria-invalid]="!!slugError()" aria-describedby="cp-slug-status" />
+        <span class="py-input-wrap__suffix">.projecty.app</span>
+      </div>
+      <div id="cp-slug-status" aria-live="polite">
+        @switch (slugStatus().kind) {
+          @case ('checking') {
+            <p class="py-field__hint">Checking…</p>
+          }
+          @case ('available') {
+            <p class="py-field__ok"><py-icon name="check" />{{ form.controls.slug.value }}.projecty.app is available</p>
+          }
+        }
+      </div>
+      @if (slugStatus(); as status) {
+        @if (status.kind === 'unavailable' && status.suggestions.length) {
+          <div class="suggestions">
+            <span class="py-caption">Try</span>
+            @for (s of status.suggestions; track s) {
+              <button class="suggestion" type="button" (click)="useSuggestion(s)">{{ s }}</button>
+            }
+          </div>
+        }
+      }
+    </py-field>
+
+    <div class="py-field" [class.is-invalid]="!!termsError()">
+      <label class="py-check">
+        <input type="checkbox" formControlName="terms" [attr.aria-invalid]="!!termsError()" />
+        <span>I agree to the Terms of service and Privacy policy</span>
+      </label>
+      @if (termsError(); as message) {
+        <p class="py-field__error"><py-icon name="alert" />{{ message }}</p>
+      }
+    </div>
+
+    <button class="py-btn py-btn--primary py-btn--block" type="submit" [disabled]="busy()">
+      @if (busy()) { <span class="py-spinner" aria-hidden="true"></span>Creating portal } @else { Create portal }
+    </button>
+  </form>
+
+  @if (!firstPortal) {
+    <p class="py-switch"><a routerLink="/portals">Back to your portals</a></p>
+  }
+</section>

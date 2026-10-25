@@ -1,0 +1,33 @@
+<div class="auth">
+  <div class="auth__pane">
+    <header class="auth__header">
+      <py-logo />
+      <button
+        class="py-btn py-btn--ghost py-btn--icon"
+        type="button"
+        [attr.aria-label]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+        (click)="theme.toggle()"
+      >
+        <py-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" />
+      </button>
+    </header>
+
+    <main class="auth__main">
+      <div class="auth__form-wrap">
+        <router-outlet />
+      </div>
+    </main>
+
+    <footer class="auth__footer py-caption">
+      <span>© {{ year }} ProjectY</span>
+    </footer>
+  </div>
+
+  <aside class="auth__showcase" aria-hidden="true">
+    @if (showcase() === 'preview') {
+      <py-portal-preview />
+    } @else {
+      <py-flow-showcase />
+    }
+  </aside>
+</div>

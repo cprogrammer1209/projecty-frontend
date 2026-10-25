@@ -1,0 +1,26 @@
+@if (me(); as me) {
+  <section aria-labelledby="portals-title">
+    <div class="py-view-head">
+      <h1 class="py-title" id="portals-title">Choose a portal</h1>
+      <p class="py-body">You're a member of {{ me.portals.length }} portals as {{ me.email }}.</p>
+    </div>
+
+    <div class="portals" role="list">
+      @for (portal of me.portals; track portal.id) {
+        <button class="portal" type="button" role="listitem" (click)="open(portal.slug)">
+          <span class="portal__tile">{{ initials(portal.name) }}</span>
+          <span class="portal__meta">
+            <span class="portal__name">{{ portal.name }}</span>
+            <span class="py-caption">{{ profileLabel(portal.profile) }} · {{ portal.slug }}.projecty.app</span>
+          </span>
+          <py-icon name="chevron-right" />
+        </button>
+      }
+    </div>
+
+    <div class="actions">
+      <button class="py-btn py-btn--ghost" type="button" (click)="signOut()"><py-icon name="arrow-left" />Sign out</button>
+      <a class="py-btn py-btn--ghost" routerLink="/portals/new"><py-icon name="plus" />Create a portal</a>
+    </div>
+  </section>
+}

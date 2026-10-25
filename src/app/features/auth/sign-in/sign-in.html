@@ -1,0 +1,49 @@
+<section aria-labelledby="signin-title">
+  <div class="py-view-head">
+    <h1 class="py-title" id="signin-title">Sign in to ProjectY</h1>
+    <p class="py-body">Use your work email and password.</p>
+  </div>
+
+  @if (alert(); as a) {
+    <div class="py-alert" [class.py-alert--ok]="a.kind === 'unverified' && a.resent" role="alert">
+      <py-icon [name]="a.kind === 'unverified' && a.resent ? 'check' : 'alert'" />
+      @switch (a.kind) {
+        @case ('credentials') {
+          <span>That email and password don't match. Check for typos, or <a routerLink="/forgot-password">reset your password</a>.</span>
+        }
+        @case ('unverified') {
+          @if (a.resent) {
+            <span>We sent a new confirmation link. Open it, then sign in.</span>
+          } @else {
+            <span>Confirm your email first. Check your inbox, or
+              <button class="py-link-btn" type="button" (click)="resendVerification()">send a new link</button>.</span>
+          }
+        }
+        @case ('message') {
+          <span>{{ a.text }}</span>
+        }
+      }
+    </div>
+  }
+
+  <form class="py-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <py-field label="Work email" for="si-email" [error]="emailError()">
+      <div class="py-input-wrap">
+        <input id="si-email" type="email" formControlName="email" autocomplete="username" placeholder="name@company.com"
+               [attr.aria-invalid]="!!emailError()" [attr.aria-describedby]="emailError() ? 'si-email-error' : null" />
+      </div>
+    </py-field>
+
+    <py-field label="Password" for="si-password" [error]="passwordError()">
+      <a fieldAction class="py-label" routerLink="/forgot-password">Forgot password?</a>
+      <py-password-input inputId="si-password" formControlName="password" autocomplete="current-password"
+                         [invalid]="!!passwordError()" [describedBy]="passwordError() ? 'si-password-error' : null" />
+    </py-field>
+
+    <button class="py-btn py-btn--primary py-btn--block" type="submit" [disabled]="busy()">
+      @if (busy()) { <span class="py-spinner" aria-hidden="true"></span>Signing in } @else { Sign in }
+    </button>
+  </form>
+
+  <p class="py-switch">New to ProjectY? <a routerLink="/sign-up">Create an account</a></p>
+</section>

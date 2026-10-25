@@ -1,3 +1,76 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+import { authGuard, guestGuard } from './core/auth/auth.guards';
+import { AuthLayout } from './features/auth/layout/auth-layout';
+
+const TITLE_SUFFIX = ' · ProjectY';
+
+export const routes: Routes = [
+  {
+    path: '',
+    component: AuthLayout,
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'sign-in' },
+      {
+        path: 'sign-in',
+        title: 'Sign in' + TITLE_SUFFIX,
+        canActivate: [guestGuard],
+        loadComponent: () => import('./features/auth/sign-in/sign-in').then((m) => m.SignIn),
+      },
+      {
+        path: 'sign-up',
+        title: 'Create account' + TITLE_SUFFIX,
+        canActivate: [guestGuard],
+        data: { showcase: 'preview' },
+        loadComponent: () => import('./features/auth/sign-up/sign-up').then((m) => m.SignUp),
+      },
+      {
+        path: 'check-email',
+        title: 'Check your email' + TITLE_SUFFIX,
+        data: { showcase: 'preview' },
+        loadComponent: () => import('./features/auth/check-email/check-email').then((m) => m.CheckEmail),
+      },
+      {
+        path: 'verify-email',
+        title: 'Confirm email' + TITLE_SUFFIX,
+        loadComponent: () => import('./features/auth/verify-email/verify-email').then((m) => m.VerifyEmail),
+      },
+      {
+        path: 'forgot-password',
+        title: 'Reset password' + TITLE_SUFFIX,
+        canActivate: [guestGuard],
+        loadComponent: () =>
+          import('./features/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+      },
+      {
+        path: 'reset-password',
+        title: 'Choose a new password' + TITLE_SUFFIX,
+        loadComponent: () =>
+          import('./features/auth/reset-password/reset-password').then((m) => m.ResetPassword),
+      },
+      {
+        path: 'portals',
+        title: 'Choose a portal' + TITLE_SUFFIX,
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/auth/portal-picker/portal-picker').then((m) => m.PortalPicker),
+      },
+      {
+        path: 'portals/new',
+        title: 'Set up your portal' + TITLE_SUFFIX,
+        canActivate: [authGuard],
+        data: { showcase: 'preview' },
+        loadComponent: () =>
+          import('./features/auth/create-portal/create-portal').then((m) => m.CreatePortal),
+      },
+    ],
+  },
+  {
+    path: 'p/:slug',
+    title: 'ProjectY',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/home/placeholder-home/placeholder-home').then((m) => m.PlaceholderHome),
+  },
+  { path: '**', redirectTo: 'sign-in' },
+];

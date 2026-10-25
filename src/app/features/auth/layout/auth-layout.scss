@@ -1,0 +1,30 @@
+:host { display: block; height: 100%; }
+
+.auth {
+  display: grid;
+  grid-template-columns: minmax(480px, 1fr) minmax(0, 1fr);
+  min-height: 100%;
+}
+.auth__pane { display: flex; flex-direction: column; padding: var(--py-space-6) var(--py-space-8); }
+.auth__header { display: flex; align-items: center; justify-content: space-between; }
+.auth__main { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--py-space-8) 0; }
+.auth__form-wrap { width: 100%; max-width: 360px; }
+.auth__footer { display: flex; gap: var(--py-space-4); }
+
+.auth__showcase {
+  position: relative;
+  background: var(--py-surface-1);
+  border-left: 1px solid var(--py-border);
+  display: flex; flex-direction: column; justify-content: center;
+  padding: var(--py-space-8) clamp(32px, 6vw, 96px);
+  overflow: hidden;
+}
+
+@media (max-width: 1023px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth__showcase { display: none; }
+}
+@media (max-width: 520px) {
+  .auth { grid-template-columns: minmax(0, 1fr); }
+  .auth__pane { padding: var(--py-space-4); }
+}

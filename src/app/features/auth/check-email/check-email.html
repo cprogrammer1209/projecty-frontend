@@ -1,0 +1,24 @@
+<section aria-labelledby="check-title">
+  <div class="py-badge-icon"><py-icon name="mail" /></div>
+  <div class="py-view-head">
+    <h1 class="py-title" id="check-title">Check your email</h1>
+    <p class="py-body">
+      We sent a confirmation link to <strong>{{ email() || 'your inbox' }}</strong>.
+      Open it, then sign in to set up your portal.
+    </p>
+  </div>
+
+  @if (error(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+
+  @if (email()) {
+    <button class="py-btn py-btn--secondary py-btn--block" type="button"
+            [disabled]="busy() || cooldown.secondsLeft() > 0" (click)="resend()">
+      @if (cooldown.secondsLeft() > 0) { Link sent. Resend in {{ cooldown.secondsLeft() }}s } @else { Resend link }
+    </button>
+    <p class="py-switch"><button class="py-link-btn" type="button" (click)="useDifferentEmail()">Use a different email</button></p>
+  } @else {
+    <a class="py-btn py-btn--secondary py-btn--block" routerLink="/sign-in">Go to sign in</a>
+  }
+</section>
