@@ -49,6 +49,20 @@ export const routes: Routes = [
           import('./features/auth/reset-password/reset-password').then((m) => m.ResetPassword),
       },
       {
+        path: 'impersonate',
+        title: 'Support session' + TITLE_SUFFIX,
+        loadComponent: () =>
+          import('./features/support/impersonation-launch/impersonation-launch').then(
+            (m) => m.ImpersonationLaunch,
+          ),
+      },
+      {
+        path: 'support-session-ended',
+        title: 'Support session ended' + TITLE_SUFFIX,
+        loadComponent: () =>
+          import('./features/support/support-ended/support-ended').then((m) => m.SupportEnded),
+      },
+      {
         path: 'portals',
         title: 'Choose a portal' + TITLE_SUFFIX,
         canActivate: [authGuard],

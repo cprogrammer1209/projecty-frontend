@@ -4,7 +4,7 @@ import { Observable, catchError, finalize, firstValueFrom, map, of, shareReplay,
 
 import { unwrap } from '../api/api-error';
 import { AppResponse } from '../api/api.types';
-import { AccessTokenResponse, Me, PortalMembership } from './auth.models';
+import { AccessTokenResponse, Impersonation, Me, PortalMembership } from './auth.models';
 
 /**
  * Holds the session. The access token lives only in memory; the refresh token is an HttpOnly cookie
@@ -21,6 +21,8 @@ export class AuthService {
   readonly accessToken = this.token.asReadonly();
   readonly me = this.currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this.token() !== null);
+  /** Set while a platform admin is signed in as this user. For display only; the server enforces it. */
+  readonly impersonation = computed(() => impersonationOf(this.token()));
 
   login(email: string, password: string): Observable<Me> {
     return this.http
@@ -30,6 +32,26 @@ export class AuthService {
         tap((res) => this.token.set(res.accessToken)),
         switchMap(() => this.loadMe()),
       );
+  }
+
+  /** Opens a support session from the admin console's one-time launch code. */
+  redeemImpersonation(code: string): Observable<Me> {
+    return this.http
+      .post<AppResponse<AccessTokenResponse>>('/api/auth/impersonation/redeem', { code })
+      .pipe(
+        unwrap(),
+        tap((res) => this.token.set(res.accessToken)),
+        switchMap(() => this.loadMe()),
+      );
+  }
+
+  /** Ends the support session; the session is cleared even if the call fails. */
+  endImpersonation(): Observable<void> {
+    return this.http.post<AppResponse<void>>('/api/auth/impersonation/end', null).pipe(
+      map(() => undefined),
+      catchError(() => of(undefined)),
+      finalize(() => this.clear()),
+    );
   }
 
   /**
@@ -94,3 +116,24 @@ export class AuthService {
   }
 }
 
+
+interface TokenClaims {
+  act?: { name?: string };
+  imp?: { exp?: number };
+}
+
+function impersonationOf(token: string | null): Impersonation | null {
+  if (!token) {
+    return null;
+  }
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const claims = JSON.parse(atob(payload)) as TokenClaims;
+    if (!claims.act || !claims.imp?.exp) {
+      return null;
+    }
+    return { adminName: claims.act.name ?? 'Support', expiresAt: new Date(claims.imp.exp * 1000) };
+  } catch {
+    return null;
+  }
+}

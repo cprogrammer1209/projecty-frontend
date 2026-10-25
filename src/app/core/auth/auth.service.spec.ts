@@ -60,4 +60,23 @@ describe('AuthService', () => {
     expect(auth.landingUrl([portal('acme')])).toBe('/p/acme');
     expect(auth.landingUrl([portal('a'), portal('b')])).toBe('/portals');
   });
+  it('reads the support session from the access token', () => {
+    const payload = (claims: object) =>
+      btoa(JSON.stringify(claims)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const token = (claims: object) => `h.${payload(claims)}.s`;
+
+    auth.refresh().subscribe();
+    http.expectOne('/api/auth/refresh').flush({
+      success: true,
+      data: { accessToken: token({ sub: 'u1', act: { sub: 'a1', name: 'Platform Admin' }, imp: { id: 'i1', exp: 1800000000 } }), tokenType: 'Bearer', expiresIn: 900 },
+    });
+    expect(auth.impersonation()).toEqual({ adminName: 'Platform Admin', expiresAt: new Date(1800000000 * 1000) });
+
+    auth.refresh().subscribe();
+    http.expectOne('/api/auth/refresh').flush({
+      success: true,
+      data: { accessToken: token({ sub: 'u1' }), tokenType: 'Bearer', expiresIn: 900 },
+    });
+    expect(auth.impersonation()).toBeNull();
+  });
 });

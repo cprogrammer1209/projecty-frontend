@@ -17,3 +17,9 @@ export interface Me {
   fullName: string;
   portals: PortalMembership[];
 }
+
+/** A support session: a platform admin acting as this user (from the token's `act`/`imp` claims). */
+export interface Impersonation {
+  adminName: string;
+  expiresAt: Date;
+}
