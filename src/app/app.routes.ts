@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestGuard, portalGuard } from './core/auth/auth.guards';
+import { authGuard, guestGuard, permissionGuard, portalGuard } from './core/auth/auth.guards';
 import { AuthLayout } from './features/auth/layout/auth-layout';
 
 const TITLE_SUFFIX = ' · ProjectY';
@@ -70,6 +70,12 @@ export const routes: Routes = [
           import('./features/auth/portal-picker/portal-picker').then((m) => m.PortalPicker),
       },
       {
+        path: 'invite',
+        title: 'Join a portal' + TITLE_SUFFIX,
+        loadComponent: () =>
+          import('./features/auth/accept-invite/accept-invite').then((m) => m.AcceptInvite),
+      },
+      {
         path: 'portal-not-found',
         title: 'Portal not found' + TITLE_SUFFIX,
         canActivate: [authGuard],
@@ -108,6 +114,12 @@ export const routes: Routes = [
             path: 'portal',
             data: { crumb: 'Settings' },
             loadComponent: () => import('./features/settings/portal-settings').then((m) => m.PortalSettings),
+          },
+          {
+            path: 'users',
+            data: { crumb: 'Users' },
+            canActivate: [permissionGuard('USERS_VIEW')],
+            loadComponent: () => import('./features/settings/users/users-page').then((m) => m.UsersPage),
           },
           {
             path: 'preferences',

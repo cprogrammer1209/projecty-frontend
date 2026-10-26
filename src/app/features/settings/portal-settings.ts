@@ -44,6 +44,7 @@ export class PortalSettings {
   private readonly locale = inject(LOCALE_ID);
 
   protected readonly portal = this.active.portal;
+  protected readonly canManage = this.active.can('PORTAL_SETTINGS_MANAGE');
   protected readonly timeZones = timeZoneOptions(this.portal()?.timeZone);
   protected readonly currencies = CURRENCIES;
   protected readonly dateFormats = DATE_FORMATS;
@@ -70,7 +71,7 @@ export class PortalSettings {
   });
 
   constructor() {
-    if (!this.portal()?.canManageSettings) {
+    if (!this.canManage) {
       this.form.disable();
     }
     this.form.valueChanges.subscribe(() => this.saved.set(false));

@@ -20,13 +20,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
   const auth = inject(AuthService);
   const router = inject(Router);
-  const portalId = inject(ActivePortalService).portalId();
+  const activePortal = inject(ActivePortalService);
+  const portalId = activePortal.portalId();
   if (portalId) {
     req = req.clone({ setHeaders: { [PORTAL_HEADER]: portalId } });
   }
 
   return next(withToken(req, auth.accessToken())).pipe(
     catchError((err: unknown) => {
+      if (isPortalAccessDenied(err)) {
+        // Deactivated or removed from this portal while using it (USR-BR-09).
+        activePortal.clear();
+        router.navigate(['/portal-not-found'], { queryParams: { reason: 'removed' } });
+        return throwError(() => err);
+      }
       if (!(err instanceof HttpErrorResponse) || err.status !== 401) {
         return throwError(() => err);
       }
@@ -43,4 +50,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
 function withToken(req: HttpRequest<unknown>, token: string | null): HttpRequest<unknown> {
   return token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+}
+
+function isPortalAccessDenied(err: unknown): boolean {
+  return (
+    err instanceof HttpErrorResponse &&
+    err.status === 403 &&
+    (err.error as { error?: { code?: string } } | null)?.error?.code === 'PORTAL_ACCESS_DENIED'
+  );
 }

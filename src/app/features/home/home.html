@@ -36,7 +36,7 @@
     <section class="panel">
       <div class="panel-head">
         <div><h2>Portal settings</h2><p>How dates and money show for everyone</p></div>
-        @if (active.portal()?.canManageSettings) {
+        @if (active.can('PORTAL_SETTINGS_MANAGE')) {
           <a class="text-btn" [routerLink]="['/p', active.portal()?.slug, 'settings']">Edit →</a>
         }
       </div>

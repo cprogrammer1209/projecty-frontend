@@ -10,7 +10,7 @@
         <span class="py-tile">{{ initials(active.portal()?.name ?? '') }}</span>
         <span class="portal-copy">
           <strong>{{ active.portal()?.name }}</strong>
-          <small>{{ profileLabel(active.portal()?.profile) }}</small>
+          <small>{{ active.membership()?.owner ? 'Owner · ' : '' }}{{ active.membership()?.profileName }}</small>
         </span>
         <py-icon name="chevrons" />
       </button>

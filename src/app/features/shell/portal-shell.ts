@@ -18,8 +18,6 @@ const COMING_LATER = [
   { icon: 'chart', label: 'Reports' },
 ];
 
-const PROFILE_LABELS: Record<string, string> = { PORTAL_OWNER: 'Portal owner' };
-
 /** Signed-in layout for /p/{slug}: sidebar with the portal switcher (PTL-US-03), top bar, current page. */
 @Component({
   selector: 'py-portal-shell',
@@ -48,10 +46,6 @@ export class PortalShell {
     ),
     { initialValue: crumbOf(this.router.routerState.snapshot.root) },
   );
-
-  protected profileLabel(profile: string | undefined): string {
-    return profile ? (PROFILE_LABELS[profile] ?? profile) : '';
-  }
 
   protected toggleSwitcher(event: Event): void {
     event.stopPropagation();

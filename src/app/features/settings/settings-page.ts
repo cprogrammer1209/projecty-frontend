@@ -10,10 +10,13 @@ import { ActivePortalService } from '../../core/portal/active-portal.service';
   template: `
     <div class="head">
       <h1>Settings</h1>
-      <p>How {{ active.portal()?.name }} shows dates and money, and your own preferences.</p>
+      <p>{{ active.portal()?.name }}: regional settings, people, and your own preferences.</p>
     </div>
     <nav class="tabs" aria-label="Settings sections">
       <a [routerLink]="['/p', active.portal()?.slug, 'settings', 'portal']" routerLinkActive="active">Portal</a>
+      @if (active.can('USERS_VIEW')) {
+        <a [routerLink]="['/p', active.portal()?.slug, 'settings', 'users']" routerLinkActive="active">Users</a>
+      }
       <a [routerLink]="['/p', active.portal()?.slug, 'settings', 'preferences']" routerLinkActive="active">My preferences</a>
     </nav>
     <router-outlet />

@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, signal } from '@angular/core';
+import { Component, ElementRef, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
@@ -26,6 +26,9 @@ export class SignIn {
   private readonly accountApi = inject(AccountApi);
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Where to go after signing in, e.g. back to an invitation (?returnUrl=/invite?token=...). */
+  readonly returnUrl = input<string>();
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     email: ['', [Validators.required, Validators.pattern(EMAIL_PATTERN)]],
@@ -58,7 +61,7 @@ export class SignIn {
     const { email, password } = this.form.getRawValue();
     this.busy.set(true);
     this.auth.login(email.trim(), password).subscribe({
-      next: (me) => this.router.navigateByUrl(this.auth.landingUrl(me.portals)),
+      next: (me) => this.router.navigateByUrl(safeReturnUrl(this.returnUrl()) ?? this.auth.landingUrl(me.portals)),
       error: (err: ApiError) => {
         this.busy.set(false);
         this.alert.set(toAlert(err));
@@ -92,4 +95,9 @@ function toAlert(err: ApiError): SignInAlert {
     default:
       return { kind: 'message', text: err.message };
   }
+}
+
+/** Only same-app paths, so the parameter can't send people to another site. */
+function safeReturnUrl(url: string | undefined): string | null {
+  return url && url.startsWith('/') && !url.startsWith('//') ? url : null;
 }

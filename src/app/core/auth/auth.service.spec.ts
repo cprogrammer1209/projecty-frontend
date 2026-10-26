@@ -55,7 +55,7 @@ describe('AuthService', () => {
   });
 
   it('routes by portal count', () => {
-    const portal = (slug: string) => ({ id: slug, name: slug, slug, profile: 'PORTAL_OWNER' });
+    const portal = (slug: string) => ({ id: slug, name: slug, slug, profile: 'ADMIN', profileName: 'Admin' });
     expect(auth.landingUrl([])).toBe('/portals/new');
     expect(auth.landingUrl([portal('acme')])).toBe('/p/acme');
     expect(auth.landingUrl([portal('a'), portal('b')])).toBe('/portals');

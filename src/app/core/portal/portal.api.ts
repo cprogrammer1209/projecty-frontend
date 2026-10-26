@@ -14,17 +14,16 @@ export interface SlugAvailability {
 
 export type WeekStart = 'MONDAY' | 'SUNDAY' | 'SATURDAY';
 
-/** The portal of the current request (X-Portal-Id), with the caller's profile in it. */
+/** The portal of the current request (X-Portal-Id) and its settings. */
 export interface CurrentPortal {
   id: string;
   name: string;
   slug: string;
-  profile: string;
+  ownerUserId: string;
   timeZone: string;
   dateFormat: string;
   currency: string;
   weekStart: WeekStart;
-  canManageSettings: boolean;
 }
 
 export interface PortalSettings {

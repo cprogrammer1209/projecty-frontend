@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs';
 
+import { Permission } from '../member/member.api';
 import { ActivePortalService } from '../portal/active-portal.service';
 
 import { AuthService } from './auth.service';
@@ -24,5 +25,19 @@ export const portalGuard: CanActivateFn = (route) => {
   const slug = route.paramMap.get('slug') ?? '';
   return inject(ActivePortalService)
     .activate(slug)
-    .pipe(map((ok) => ok || router.parseUrl('/portal-not-found')));
+    .pipe(
+      map((result) =>
+        result === 'ok'
+          ? true
+          : router.createUrlTree(['/portal-not-found'], result === 'removed' ? { queryParams: { reason: 'removed' } } : {}),
+      ),
+    );
 };
+
+/** Pages that need a permission in the active portal; without it, back to the portal's home. */
+export function permissionGuard(permission: Permission): CanActivateFn {
+  return () => {
+    const active = inject(ActivePortalService);
+    return active.can(permission) || inject(Router).parseUrl(`/p/${active.portal()?.slug ?? ''}`);
+  };
+}

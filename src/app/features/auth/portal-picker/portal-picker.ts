@@ -5,10 +5,6 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { initials } from '../text';
 
-const PROFILE_LABELS: Record<string, string> = {
-  PORTAL_OWNER: 'Portal owner',
-};
-
 @Component({
   selector: 'py-portal-picker',
   imports: [RouterLink, Icon],
@@ -21,10 +17,6 @@ export class PortalPicker {
 
   protected readonly me = this.auth.me;
   protected readonly initials = initials;
-
-  protected profileLabel(profile: string): string {
-    return PROFILE_LABELS[profile] ?? profile;
-  }
 
   protected open(slug: string): void {
     this.router.navigateByUrl(`/p/${slug}`);

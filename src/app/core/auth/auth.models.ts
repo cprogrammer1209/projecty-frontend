@@ -8,7 +8,9 @@ export interface PortalMembership {
   id: string;
   name: string;
   slug: string;
+  /** Profile key, e.g. ADMIN. */
   profile: string;
+  profileName: string;
 }
 
 export interface Me {

@@ -1,0 +1,142 @@
+@if (error(); as message) {
+  <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+}
+@if (notice(); as message) {
+  <div class="py-alert py-alert--ok" role="status"><py-icon name="check" /><span>{{ message }}</span></div>
+}
+
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>Users</h2>
+      <p>{{ activeCount() }} active of {{ members()?.length ?? 0 }} in {{ active.portal()?.name }}</p>
+    </div>
+    @if (canManage) {
+      <button class="py-btn py-btn--primary" type="button" (click)="openInvite()"><py-icon name="plus" />Invite people</button>
+    }
+  </div>
+
+  <div class="filters">
+    <label class="py-input-wrap search"><py-icon name="search" /><input placeholder="Search by name or email" aria-label="Search users" (input)="onQuery($event)" /></label>
+    <select class="py-select status" aria-label="Filter by status" (change)="onStatus($event)">
+      <option value="ALL">All statuses</option>
+      <option value="ACTIVE">Active</option>
+      <option value="DEACTIVATED">Deactivated</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>User</th><th>Profile</th><th>Status</th><th>Last active</th>@if (canManage) { <th></th> }</tr></thead>
+      <tbody>
+        @if (!members()) {
+          <tr><td colspan="5" class="empty">Loading users…</td></tr>
+        }
+        @for (m of visible(); track m.userId) {
+          <tr [class.inactive]="m.status === 'DEACTIVATED'">
+            <td>
+              <div class="person">
+                <span class="py-avatar">{{ initials(m.fullName) }}</span>
+                <div>
+                  <strong>{{ m.fullName }}@if (isSelf(m)) { <span class="you">(you)</span> }</strong>
+                  <small>{{ m.email }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              @if (canManage && !m.owner && m.status === 'ACTIVE') {
+                <select class="py-select profile" [attr.aria-label]="'Profile of ' + m.fullName" [value]="m.profileId"
+                        [disabled]="busyUser() === m.userId" (change)="changeProfile(m, $event)">
+                  @for (p of profiles(); track p.id) { <option [value]="p.id" [selected]="p.id === m.profileId">{{ p.name }}</option> }
+                </select>
+              } @else {
+                {{ m.profileName }}@if (m.owner) { <span class="chip" title="The owner always stays an active Admin">Owner</span> }
+              }
+            </td>
+            <td><span class="badge" [class.ok]="m.status === 'ACTIVE'">{{ m.status === 'ACTIVE' ? 'Active' : 'Deactivated' }}</span></td>
+            <td>{{ m.lastLoginAt ? (m.lastLoginAt | pyDate) : 'Never' }}</td>
+            @if (canManage) {
+              <td class="actions">
+                @if (!m.owner && !isSelf(m)) {
+                  <button class="py-btn py-btn--ghost" type="button" [disabled]="busyUser() === m.userId"
+                          (click)="m.status === 'ACTIVE' ? confirmUser.set(m) : toggleActive(m)">
+                    {{ m.status === 'ACTIVE' ? 'Deactivate' : 'Reactivate' }}
+                  </button>
+                }
+              </td>
+            }
+          </tr>
+        } @empty {
+          @if (members()) { <tr><td colspan="5" class="empty">No users match.</td></tr> }
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@if (canManage && invitations().length) {
+  <section class="panel">
+    <div class="panel-head"><div><h2>Pending invitations</h2><p>Invitations expire after 7 days.</p></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Email</th><th>Profile</th><th>Invited by</th><th>Expires</th><th></th></tr></thead>
+        <tbody>
+          @for (i of invitations(); track i.id) {
+            <tr>
+              <td>{{ i.email }}</td>
+              <td>{{ i.profileName }}</td>
+              <td>{{ i.invitedByName }}</td>
+              <td>{{ i.expiresAt | pyDate }}</td>
+              <td class="actions">
+                <button class="py-btn py-btn--ghost" type="button" (click)="resend(i)">Resend</button>
+                <button class="py-btn py-btn--ghost" type="button" (click)="revoke(i)">Withdraw</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+@if (confirmUser(); as m) {
+  <div class="overlay" (click)="confirmUser.set(null)">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="deactivate-title" (click)="$event.stopPropagation()">
+      <h2 id="deactivate-title">Deactivate {{ m.fullName }}?</h2>
+      <p>They lose access to {{ active.portal()?.name }} immediately. Their past work stays attributed to them, and you can reactivate them later.</p>
+      <div class="dialog-actions">
+        <button class="py-btn py-btn--secondary" type="button" (click)="confirmUser.set(null)">Cancel</button>
+        <button class="py-btn py-btn--danger" type="button" (click)="toggleActive(m)">Deactivate</button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (inviteOpen()) {
+  <div class="overlay" (click)="inviteOpen.set(false)">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="invite-title" (click)="$event.stopPropagation()">
+      <h2 id="invite-title">Invite people</h2>
+      <p>They get an email with a link to join {{ active.portal()?.name }}. The link works for 7 days.</p>
+      @if (inviteError(); as message) {
+        <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+      }
+      <form class="py-form" [formGroup]="inviteForm" (ngSubmit)="sendInvite()" novalidate>
+        <py-field label="Work email" for="inv-email"
+                  [error]="inviteForm.controls.email.touched && inviteForm.controls.email.invalid ? 'Enter an email like name@company.com.' : null">
+          <div class="py-input-wrap"><input id="inv-email" type="email" formControlName="email" placeholder="name@company.com" /></div>
+        </py-field>
+        <py-field label="Profile" for="inv-profile">
+          <select id="inv-profile" class="py-select" formControlName="profileId">
+            @for (p of profiles(); track p.id) { <option [value]="p.id">{{ p.name }} — {{ p.description }}</option> }
+          </select>
+        </py-field>
+        <div class="dialog-actions">
+          <button class="py-btn py-btn--secondary" type="button" (click)="inviteOpen.set(false)">Cancel</button>
+          <button class="py-btn py-btn--primary" type="submit" [disabled]="inviteBusy()">
+            @if (inviteBusy()) { <span class="py-spinner" aria-hidden="true"></span>Sending } @else { Send invitation }
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

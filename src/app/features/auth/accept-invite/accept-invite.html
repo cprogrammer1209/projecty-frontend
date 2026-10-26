@@ -1,0 +1,60 @@
+<section aria-labelledby="invite-title" aria-live="polite">
+  @if (loadError(); as message) {
+    <div class="py-view-head">
+      <h1 class="py-title" id="invite-title">Invitation not available</h1>
+      <p class="py-body">{{ message }}</p>
+    </div>
+    <a class="py-btn py-btn--secondary py-btn--block" routerLink="/sign-in">Go to sign in</a>
+  } @else if (preview(); as p) {
+    @if (!p.valid) {
+      <div class="py-view-head">
+        <h1 class="py-title" id="invite-title">This invitation has expired</h1>
+        <p class="py-body">Invitations work once and last 7 days. Ask {{ p.invitedByName ?? 'an admin of ' + p.portalName }} for a new one.</p>
+      </div>
+      <a class="py-btn py-btn--secondary py-btn--block" routerLink="/sign-in">Go to sign in</a>
+    } @else {
+      <div class="py-badge-icon"><py-icon name="mail" /></div>
+      <div class="py-view-head">
+        <h1 class="py-title" id="invite-title">Join {{ p.portalName }}</h1>
+        <p class="py-body">{{ p.invitedByName ?? 'An admin' }} invited <strong>{{ p.email }}</strong> to join as {{ p.profileName }}.</p>
+      </div>
+
+      @if (error(); as message) {
+        <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+      }
+
+      @if (!p.accountExists) {
+        <form class="py-form" [formGroup]="form" (ngSubmit)="createAndJoin()" novalidate>
+          <py-field label="Work email" for="ai-email">
+            <div class="py-input-wrap"><input id="ai-email" type="email" [value]="p.email" disabled /></div>
+          </py-field>
+          <py-field label="Full name" for="ai-name" [error]="nameError()">
+            <div class="py-input-wrap"><input id="ai-name" type="text" formControlName="fullName" autocomplete="name" [attr.aria-invalid]="!!nameError()" /></div>
+          </py-field>
+          <py-field label="Password" for="ai-password" [error]="passwordError()" [hint]="minLength + '+ characters'">
+            <py-password-input inputId="ai-password" formControlName="password" autocomplete="new-password" [invalid]="!!passwordError()" />
+          </py-field>
+          <button class="py-btn py-btn--primary py-btn--block" type="submit" [disabled]="busy()">
+            @if (busy()) { <span class="py-spinner" aria-hidden="true"></span>Joining } @else { Create account and join }
+          </button>
+        </form>
+      } @else if (signedInAsInvitee()) {
+        <button class="py-btn py-btn--primary py-btn--block" type="button" [disabled]="busy()" (click)="join()">
+          @if (busy()) { <span class="py-spinner" aria-hidden="true"></span>Joining } @else { Join {{ p.portalName }} }
+        </button>
+      } @else if (auth.isAuthenticated()) {
+        <div class="py-alert" role="status"><py-icon name="alert" />
+          <span>You're signed in as {{ auth.me()?.email }}. This invitation is for {{ p.email }}.</span>
+        </div>
+        <button class="py-btn py-btn--secondary py-btn--block" type="button" (click)="signOut()">Sign out to accept</button>
+      } @else {
+        <a class="py-btn py-btn--primary py-btn--block" routerLink="/sign-in" [queryParams]="{ returnUrl: returnUrl() }">Sign in to accept</a>
+        <p class="py-switch">You already have a ProjectY account with this email.</p>
+      }
+    }
+  } @else {
+    <div class="py-view-head">
+      <h1 class="py-title" id="invite-title">Opening your invitation…</h1>
+    </div>
+  }
+</section>
