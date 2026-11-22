@@ -119,3 +119,13 @@ button { font: inherit; }
 .py-select:focus { outline: 0; border-color: var(--py-brand); box-shadow: 0 0 0 1px var(--py-brand); }
 .py-select:disabled { background: var(--py-surface-1); color: var(--py-ink-muted); }
 .py-field.is-invalid .py-select { border-color: var(--py-status-blocked); }
+
+/* Multi-line text box, styled like an input */
+.py-textarea {
+  width: 100%; padding: var(--py-space-2) var(--py-space-3); resize: vertical;
+  border: 1px solid var(--py-border-control); border-radius: var(--py-radius-md);
+  background: var(--py-surface-0); color: var(--py-ink); font: 400 14px/20px var(--py-font-ui);
+}
+.py-textarea:focus { outline: 0; border-color: var(--py-brand); box-shadow: 0 0 1px 1px var(--py-brand); }
+.py-textarea::placeholder { color: var(--py-ink-muted); }
+.py-field.is-invalid .py-textarea { border-color: var(--py-status-blocked); }

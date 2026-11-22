@@ -1,0 +1,41 @@
+<a class="back" [routerLink]="['/p', active.portal()?.slug, 'projects']"><py-icon name="arrow-left" />All projects</a>
+<div class="page-title">
+  <div>
+    <h1>Trash</h1>
+    <p>Deleted projects you own or, as an Admin, in this portal. Restoring brings back everything in them.</p>
+  </div>
+</div>
+
+@if (error(); as message) {
+  <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+}
+@if (notice(); as message) {
+  <div class="py-alert py-alert--ok" role="status"><py-icon name="check" /><span>{{ message }}</span></div>
+}
+
+<section class="panel">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Project</th><th>Deleted by</th><th>Deleted</th><th></th></tr></thead>
+      <tbody>
+        @if (!projects()) {
+          <tr><td colspan="4" class="empty">Loading…</td></tr>
+        }
+        @for (p of projects() ?? []; track p.id) {
+          <tr>
+            <td>
+              <div class="proj"><span class="key">{{ p.key }}</span><div><strong>{{ p.name }}</strong><small>{{ p.status }}</small></div></div>
+            </td>
+            <td>{{ people.nameOf(p.deletedByUserId) }}</td>
+            <td class="nowrap">{{ p.deletedAt | pyDate: dateTimePattern() }}</td>
+            <td class="actions">
+              <button class="py-btn py-btn--secondary" type="button" [disabled]="busyId() === p.id" (click)="restore(p)">Restore</button>
+            </td>
+          </tr>
+        } @empty {
+          @if (projects()) { <tr><td colspan="4" class="empty">The trash is empty.</td></tr> }
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

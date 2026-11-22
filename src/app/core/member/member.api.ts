@@ -6,7 +6,15 @@ import { unwrap } from '../api/api-error';
 import { AppResponse } from '../api/api.types';
 
 /** Permission names from the backend's PermissionConstants. */
-export type Permission = 'PORTAL_SETTINGS_MANAGE' | 'USERS_VIEW' | 'USERS_MANAGE' | 'AUDIT_VIEW';
+export type Permission =
+  | 'PORTAL_SETTINGS_MANAGE'
+  | 'USERS_VIEW'
+  | 'USERS_MANAGE'
+  | 'AUDIT_VIEW'
+  | 'PROJECTS_VIEW'
+  | 'PROJECTS_CREATE'
+  | 'PROJECTS_EDIT'
+  | 'PROJECTS_DELETE';
 
 export interface MyMembership {
   profileId: string;

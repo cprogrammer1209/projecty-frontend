@@ -9,11 +9,13 @@ import { ThemeService } from '../../core/theme/theme.service';
 import { Icon } from '../../shared/ui/icon/icon';
 import { initials } from '../auth/text';
 
-/** Sections that arrive with the Work service (M1); shown so the layout is complete, but disabled. */
-const COMING_LATER = [
+/**
+ * Work sections (M1). Those with a `route` are built; the rest are shown so the layout is complete, but disabled.
+ */
+const COMING_LATER: { icon: string; label: string; route?: string }[] = [
   { icon: 'user', label: 'My Work' },
   { icon: 'inbox', label: 'Inbox' },
-  { icon: 'folder', label: 'Projects' },
+  { icon: 'folder', label: 'Projects', route: 'projects' },
   { icon: 'layers', label: 'Portfolio' },
   { icon: 'chart', label: 'Reports' },
 ];

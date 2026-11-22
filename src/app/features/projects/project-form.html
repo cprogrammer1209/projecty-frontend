@@ -1,0 +1,133 @@
+@if (loading()) {
+  <p class="py-caption">Loading…</p>
+} @else if (missing()) {
+  <section class="panel">
+    <div class="not-found">
+      <b>Project not found</b><br />It doesn't exist, was moved to the trash, or you can't see it.<br /><br />
+      <a class="py-btn py-btn--secondary" [routerLink]="['/p', active.portal()?.slug, 'projects']">Back to projects</a>
+    </div>
+  </section>
+} @else if (forbidden()) {
+  <section class="panel">
+    <div class="not-found">
+      <b>You can't edit this project</b><br />Only Admins, the owner and project Managers can edit it.<br /><br />
+      <a class="py-btn py-btn--secondary" [routerLink]="backLink()">Back to the project</a>
+    </div>
+  </section>
+} @else {
+  <a class="back" [routerLink]="backLink()"><py-icon name="arrow-left" />{{ project() ? project()!.name : 'All projects' }}</a>
+  <div class="page-title">
+    <div>
+      <h1>{{ id() ? 'Edit project' : 'New project' }}</h1>
+      <p>
+        @if (project(); as p) { Update the details. The key stays the same, because item IDs like {{ p.key }}-T42 depend on it. }
+        @else { A project holds the phases, tasks and documents of one piece of work. You become its owner and Manager. }
+      </p>
+    </div>
+  </div>
+
+  @if (alert(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="pf-grid">
+      <div class="pf-main">
+        <section class="panel pf-card">
+          <h2>Basics</h2>
+          <py-field label="Project name" for="pj-name" [error]="nameError()">
+            <div class="py-input-wrap">
+              <input id="pj-name" type="text" formControlName="name" placeholder="Website Redesign" autocomplete="off"
+                     [attr.aria-invalid]="!!nameError()" [attr.aria-describedby]="nameError() ? 'pj-name-error' : null" />
+            </div>
+          </py-field>
+          <div class="pf-row">
+            <py-field label="Key" for="pj-key" [error]="keyError()"
+                      [hint]="keyStatus().kind === 'idle' ? (id() ? 'Can\'t be changed after creation.' : '2 to 10 capital letters or numbers. Used in item IDs.') : null">
+              <div class="py-input-wrap key-wrap">
+                <input id="pj-key" type="text" formControlName="key" maxlength="10" autocomplete="off" spellcheck="false" placeholder="WEB"
+                       (input)="onKeyTyped()" [attr.aria-invalid]="!!keyError()" [attr.aria-describedby]="keyError() ? 'pj-key-error' : 'pj-key-status'" />
+              </div>
+              <div id="pj-key-status" aria-live="polite">
+                @switch (keyStatus().kind) {
+                  @case ('checking') { <p class="py-field__hint">Checking…</p> }
+                  @case ('available') { <p class="py-field__ok"><py-icon name="check" />{{ form.controls.key.value }} is available</p> }
+                }
+              </div>
+            </py-field>
+            <py-field label="Owner" for="pj-owner" hint="The owner is always a Manager of the project.">
+              <select id="pj-owner" class="py-select" formControlName="ownerUserId">
+                @for (m of people.activeMembers(); track m.userId) {
+                  <option [value]="m.userId">{{ m.fullName }}{{ m.userId === auth.me()?.id ? ' (you)' : '' }}</option>
+                }
+              </select>
+            </py-field>
+          </div>
+          <py-field label="Description" for="pj-desc" hint="Optional. Shown on the project overview.">
+            <textarea id="pj-desc" class="py-textarea" rows="5" formControlName="description" placeholder="What is this project for?"></textarea>
+          </py-field>
+        </section>
+
+        <section class="panel pf-card">
+          <h2>Schedule</h2>
+          <p class="pf-sub">Dates are optional. You can set them later.</p>
+          <div class="pf-row">
+            <py-field label="Start date" for="pj-start">
+              <div class="py-input-wrap"><input id="pj-start" type="date" formControlName="startDate" /></div>
+            </py-field>
+            <py-field label="End date" for="pj-end" [error]="endError()">
+              <div class="py-input-wrap">
+                <input id="pj-end" type="date" formControlName="endDate" [attr.aria-invalid]="!!endError()" [attr.aria-describedby]="endError() ? 'pj-end-error' : null" />
+              </div>
+            </py-field>
+          </div>
+        </section>
+
+        <section class="panel pf-card">
+          <h2>Who can see it</h2>
+          <div class="radio-cards" role="radiogroup" aria-label="Who can see the project">
+            <label class="radio-card">
+              <input type="radio" formControlName="visibility" value="PRIVATE" />
+              <span class="rc-ic"><py-icon name="user" /></span>
+              <span><strong>Private</strong><small>Only the project members and Admins can see it.</small></span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" formControlName="visibility" value="PUBLIC" />
+              <span class="rc-ic"><py-icon name="globe" /></span>
+              <span><strong>Public</strong><small>Every employee in the portal can see it, read-only. Clients only if they are members.</small></span>
+            </label>
+          </div>
+        </section>
+      </div>
+
+      <aside class="pf-side">
+        <section class="panel pf-card pf-preview">
+          <h2>Preview</h2>
+          <div class="pv-top">
+            <span class="key">{{ preview().key }}</span>
+            <span class="chip-vis">
+              <py-icon [name]="preview().visibility === 'PUBLIC' ? 'globe' : 'user'" />{{ preview().visibility === 'PUBLIC' ? 'Public' : 'Private' }}
+            </span>
+          </div>
+          <div class="pv-name">{{ preview().name }}</div>
+          <dl class="pv-facts">
+            <div><dt>Owner</dt><dd>{{ preview().owner }}</dd></div>
+            <div>
+              <dt>Dates</dt>
+              <dd>@if (preview().start || preview().end) { {{ preview().start | pyDay }} → {{ preview().end | pyDay }} } @else { No dates yet }</dd>
+            </div>
+            <div><dt>Status</dt><dd>{{ project() ? project()!.status : 'Active (you can change it later)' }}</dd></div>
+            <div><dt>First item ID</dt><dd class="mono">{{ preview().firstItem }}</dd></div>
+          </dl>
+        </section>
+      </aside>
+    </div>
+
+    <div class="pf-bar">
+      <a class="py-btn py-btn--secondary" [routerLink]="backLink()">Cancel</a>
+      <button class="py-btn py-btn--primary" type="submit" [disabled]="busy()">
+        @if (busy()) { <span class="py-spinner" aria-hidden="true"></span>Saving } @else { {{ id() ? 'Save changes' : 'Create project' }} }
+      </button>
+    </div>
+  </form>
+}

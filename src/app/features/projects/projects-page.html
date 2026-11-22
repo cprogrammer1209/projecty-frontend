@@ -1,0 +1,84 @@
+<div class="page-title">
+  <div>
+    <h1>Projects</h1>
+    <p>@if (projects(); as list) { {{ list.length }} you can see in {{ active.portal()?.name }} } @else { &nbsp; }</p>
+  </div>
+  <div class="page-actions">
+    @if (canTrash) {
+      <a class="py-btn py-btn--ghost" [routerLink]="['/p', active.portal()?.slug, 'projects', 'trash']"><py-icon name="inbox" />Trash</a>
+    }
+    @if (canCreate) {
+      <a class="py-btn py-btn--primary" [routerLink]="['/p', active.portal()?.slug, 'projects', 'new']"><py-icon name="plus" />New project</a>
+    }
+  </div>
+</div>
+
+@if (error(); as message) {
+  <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+}
+@if (notice(); as message) {
+  <div class="py-alert py-alert--ok" role="status"><py-icon name="check" /><span>{{ message }}</span></div>
+}
+
+<section class="panel">
+  <div class="filters">
+    <label class="py-input-wrap search"><py-icon name="search" /><input placeholder="Search by name or key" aria-label="Search projects" (input)="onQuery($event)" /></label>
+    <select class="py-select" aria-label="Filter by status" (change)="onStatus($event)">
+      <option value="ALL">All statuses</option>
+      @for (s of statuses(); track s.name) { <option [value]="s.name">{{ s.name }}</option> }
+    </select>
+    <select class="py-select" aria-label="Filter by owner" (change)="onOwner($event)">
+      <option value="ALL">All owners</option>
+      @for (o of owners(); track o.id) { <option [value]="o.id">{{ o.name }}</option> }
+    </select>
+    <select class="py-select" aria-label="Sort by" (change)="onSort($event)">
+      <option value="name">Sort: name</option>
+      <option value="key">Sort: key</option>
+      <option value="end">Sort: end date</option>
+      <option value="status">Sort: status</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Project</th><th>Status</th><th>Owner</th><th>Progress</th><th>Dates</th><th></th></tr></thead>
+      <tbody>
+        @if (!projects()) {
+          <tr><td colspan="6" class="empty">Loading projects…</td></tr>
+        }
+        @for (p of visible(); track p.id) {
+          <tr class="click" tabindex="0" role="link" [attr.aria-label]="'Open ' + p.name" (click)="open(p)" (keydown.enter)="open(p)">
+            <td>
+              <div class="proj">
+                <span class="key">{{ p.key }}</span>
+                <div><strong>{{ p.name }}</strong>@if (p.description) { <small>{{ p.description }}</small> }</div>
+              </div>
+            </td>
+            <td><py-project-status [status]="p.status" /></td>
+            <td>
+              <div class="person">
+                <span class="py-avatar py-avatar--sm">{{ initials(people.nameOf(p.ownerUserId)) }}</span>
+                <strong>{{ people.nameOf(p.ownerUserId) }}</strong>
+              </div>
+            </td>
+            <td>
+              <div class="pbar" title="Progress comes from closed tasks, which arrive with Tasks"><div class="bar"><i [style.width.%]="p.progress"></i></div><span>{{ p.progress }}%</span></div>
+            </td>
+            <td class="nowrap">
+              @if (p.startDate || p.endDate) { {{ p.startDate | pyDay }} → {{ p.endDate | pyDay }} } @else { <span class="muted">No dates</span> }
+            </td>
+            <td class="chev"><py-icon name="chevron-right" /></td>
+          </tr>
+        } @empty {
+          @if (projects()) {
+            <tr>
+              <td colspan="6" class="empty">
+                @if (filtering()) { No projects match. } @else if (canCreate) { No projects yet. Create the first one. } @else { You are not in any project yet. }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

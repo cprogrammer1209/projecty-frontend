@@ -1,0 +1,144 @@
+@if (missing()) {
+  <section class="panel">
+    <div class="not-found">
+      <b>Project not found</b><br />It doesn't exist, was moved to the trash, or you can't see it.<br /><br />
+      <a class="py-btn py-btn--secondary" [routerLink]="['/p', active.portal()?.slug, 'projects']">Back to projects</a>
+    </div>
+  </section>
+} @else if (detail(); as d) {
+  <a class="back" [routerLink]="['/p', active.portal()?.slug, 'projects']"><py-icon name="arrow-left" />All projects</a>
+
+  @if (error(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+  @if (notice(); as message) {
+    <div class="py-alert py-alert--ok" role="status"><py-icon name="check" /><span>{{ message }}</span></div>
+  }
+
+  <div class="page-title">
+    <div>
+      <div class="ov-key">
+        <span class="key">{{ d.project.key }}</span>
+        <span class="chip-vis" [title]="d.project.visibility === 'PUBLIC' ? 'Visible to every employee in the portal, read-only' : 'Only members and Admins can see it'">
+          <py-icon [name]="d.project.visibility === 'PUBLIC' ? 'globe' : 'user'" />{{ d.project.visibility === 'PUBLIC' ? 'Public' : 'Private' }}
+        </span>
+      </div>
+      <h1>{{ d.project.name }}</h1>
+      <p>
+        Owned by {{ people.nameOf(d.project.ownerUserId) }} ·
+        @if (d.project.startDate || d.project.endDate) { {{ d.project.startDate | pyDay }} → {{ d.project.endDate | pyDay }} } @else { No dates }
+      </p>
+    </div>
+    <div class="page-actions">
+      @if (d.project.canEdit) {
+        <select class="py-select status-select" aria-label="Project status" [disabled]="busy()" (change)="onStatus($event)">
+          @for (s of statuses(); track s.name) { <option [value]="s.name" [selected]="s.name === d.project.status">{{ s.name }}</option> }
+        </select>
+        <a class="py-btn py-btn--secondary" [routerLink]="['/p', active.portal()?.slug, 'projects', d.project.id, 'edit']">Edit</a>
+      } @else {
+        <py-project-status [status]="d.project.status" />
+      }
+      @if (d.project.canDelete) {
+        <button class="py-btn py-btn--ghost danger" type="button" (click)="confirmDelete.set(true)">Delete</button>
+      }
+    </div>
+  </div>
+
+  @if (!d.project.canEdit) {
+    <div class="py-alert" role="status">
+      <py-icon name="alert" />
+      <span>{{ d.project.member ? 'Your project role is Member, so this project is read-only for you.' : 'You can see this project, but you are not a member, so it is read-only.' }}</span>
+    </div>
+  }
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Progress</div><div class="stat-value">{{ d.project.progress }}%</div><div class="stat-foot">Closed tasks ÷ all tasks</div></div>
+    <div class="stat"><div class="stat-label">Open tasks</div><div class="stat-value">—</div><div class="stat-foot">Tasks arrive next</div></div>
+    <div class="stat"><div class="stat-label">Closed tasks</div><div class="stat-value">—</div><div class="stat-foot">Tasks arrive next</div></div>
+    <div class="stat"><div class="stat-label">Overdue</div><div class="stat-value">—</div><div class="stat-foot">Needs tasks with dates</div></div>
+  </div>
+
+  <div class="ov-grid">
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-head"><div><h2>About</h2></div></div>
+        <div class="about">@if (d.project.description) { {{ d.project.description }} } @else { <span class="muted">No description yet.</span> }</div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><div><h2>Upcoming phases</h2><p>Milestones and their dates</p></div></div>
+        <div class="empty line">Phases arrive with the next step.</div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><div><h2>Recent activity</h2><p>Changes to this project</p></div></div>
+        @if (d.activity.length) {
+          <ul class="act">
+            @for (a of d.activity; track $index) {
+              <li>
+                <span class="py-avatar py-avatar--sm">{{ initials(a.actorName ?? people.nameOf(a.actorUserId)) }}</span>
+                <div>
+                  <strong>{{ a.actorName ?? people.nameOf(a.actorUserId) }}</strong>&nbsp;<span class="muted">{{ activityLabels[a.action] ?? a.action }}</span><br />
+                  <small>{{ a.detail }}@if (a.targetUserId) { · {{ people.nameOf(a.targetUserId) }} } · {{ a.createdAt | pyDate: dateTimePattern() }}</small>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty line">No activity yet.</div>
+        }
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-head"><div><h2>Members</h2><p>{{ d.members.length }} in this project</p></div></div>
+        <ul class="members">
+          @for (m of d.members; track m.userId) {
+            <li>
+              <span class="py-avatar">{{ initials(people.nameOf(m.userId)) }}</span>
+              <div class="mi">
+                <strong>{{ people.nameOf(m.userId) }}@if (m.userId === auth.me()?.id) { <span class="you"> (you)</span> }</strong>
+              </div>
+              <span class="chip">{{ m.owner ? 'Owner · ' : '' }}{{ m.role === 'MANAGER' ? 'Manager' : 'Member' }}</span>
+              @if (d.project.canEdit && !m.owner) {
+                <button class="icon-x" type="button" [attr.aria-label]="'Remove ' + people.nameOf(m.userId) + ' from the project'" title="Remove" (click)="removeMember(m.userId)">✕</button>
+              }
+            </li>
+          }
+        </ul>
+        @if (d.project.canEdit) {
+          <div class="add-member">
+            @if (freePeople().length) {
+              <select class="py-select" aria-label="Person to add" (change)="onAddUser($event)">
+                <option value="">Add a person…</option>
+                @for (p of freePeople(); track p.userId) { <option [value]="p.userId">{{ p.fullName }} · {{ p.profileName }}</option> }
+              </select>
+              <select class="py-select role" aria-label="Project role" (change)="onAddRole($event)">
+                <option value="MEMBER">Member</option>
+                <option value="MANAGER">Manager</option>
+              </select>
+              <button class="py-btn py-btn--secondary" type="button" [disabled]="!addUserId() || busy()" (click)="addMember()">Add</button>
+            } @else {
+              <p class="muted">Everyone in the portal is already in this project.</p>
+            }
+          </div>
+          <p class="hint">Only people already in the portal can join. Invite new people in Settings → Users.</p>
+        }
+      </section>
+    </div>
+  </div>
+
+  @if (confirmDelete()) {
+    <div class="overlay" (click)="confirmDelete.set(false)">
+      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title" (click)="$event.stopPropagation()">
+        <h2 id="delete-title">Delete {{ d.project.name }}?</h2>
+        <p>It moves to the trash with everything in it. You or an Admin can restore it from Projects → Trash.</p>
+        <div class="dialog-actions">
+          <button class="py-btn py-btn--secondary" type="button" (click)="confirmDelete.set(false)">Cancel</button>
+          <button class="py-btn py-btn--danger" type="button" [disabled]="busy()" (click)="deleteProject()">Move to trash</button>
+        </div>
+      </section>
+    </div>
+  }
+} @else {
+  <p class="py-caption">Loading project…</p>
+}
