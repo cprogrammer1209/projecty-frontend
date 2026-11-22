@@ -87,6 +87,12 @@ export interface ProjectInput {
 /** The key never changes after creation, and the layout is changed in the project settings. */
 export type ProjectUpdate = Omit<ProjectInput, 'key' | 'layoutId'>;
 
+/**
+ * What an update sends. Only the properties present change; a property left out stays as it is, and `null` clears the
+ * dates, the description or an answer. The complete Edit form sends all of them, a single-field edit sends one.
+ */
+export type ProjectPatch = Partial<ProjectUpdate>;
+
 /** The Work service: projects of the active portal (X-Portal-Id). Served under /api/work. */
 @Injectable({ providedIn: 'root' })
 export class ProjectApi {
@@ -108,8 +114,8 @@ export class ProjectApi {
     return this.http.post<AppResponse<{ id: string }>>('/api/work/projects', input).pipe(unwrap());
   }
 
-  update(id: string, input: ProjectUpdate): Observable<Project> {
-    return this.http.patch<AppResponse<Project>>(`/api/work/projects/${id}`, input).pipe(unwrap());
+  update(id: string, patch: ProjectPatch): Observable<Project> {
+    return this.http.patch<AppResponse<Project>>(`/api/work/projects/${id}`, patch).pipe(unwrap());
   }
 
   /** Applies another layout. Answers for fields the layout does not show are kept. */

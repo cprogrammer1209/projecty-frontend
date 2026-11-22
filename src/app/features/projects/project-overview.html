@@ -66,9 +66,11 @@
 
   <div class="ov-grid">
     <div class="stack">
-      <section class="panel">
-        <div class="panel-head"><div><h2>About</h2></div></div>
-        <div class="about">@if (d.project.description) { {{ d.project.description }} } @else { <span class="muted">No description yet.</span> }</div>
+      <section class="panel cf-card">
+        <div class="panel-head"><div><h2>About this project</h2></div></div>
+        <div class="cf-props">
+          <py-property-list [fields]="detailFields()" [values]="detailValues()" [people]="people.activeMembers()" [canEdit]="d.project.canEdit" [save]="saveCore" />
+        </div>
       </section>
       @if (sections().length) {
         <div class="cf-sections">

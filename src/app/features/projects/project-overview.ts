@@ -6,10 +6,11 @@ import { ApiError } from '../../core/api/api.types';
 import { AuthService } from '../../core/auth/auth.service';
 import { PortalPeople } from '../../core/member/portal-people.service';
 import { ActivePortalService } from '../../core/portal/active-portal.service';
-import { LayoutSection } from '../../core/customfield/layout.api';
+import { LayoutField, LayoutSection } from '../../core/customfield/layout.api';
 import {
   ProjectApi,
   ProjectDetail,
+  ProjectPatch,
   ProjectRole,
   ProjectStatus as ProjectStatusItem,
 } from '../../core/project/project.api';
@@ -67,37 +68,82 @@ export class ProjectOverview implements OnInit {
   /** Only the sections of the project's layout that have a visible field. */
   protected readonly sections = computed(() => (this.detail()?.layout.sections ?? []).filter((s) => s.fields.length));
   
-  /** Saves one custom answer: the other project values go along unchanged, and keys not sent stay as they are. */
+  /** The properties every project has, as pickers for the Details card (a property's name is its key in an update). */
+  protected readonly detailFields = computed<LayoutField[]>(() => {
+    const field = (apiName: string, label: string, fieldType: LayoutField['fieldType'], extra: Partial<LayoutField> = {}): LayoutField => ({
+      fieldId: apiName, apiName, label, description: null, fieldType, mandatory: false, fieldMandatory: false, readOnly: false,
+      wide: false, unique: false, sensitive: false, defaultValue: null, config: {}, options: [], ...extra,
+    });
+    return [
+      field('name', 'Name', 'TEXT', { mandatory: true, config: { maxLength: 100 } }),
+      field('ownerUserId', 'Owner', 'USER', { mandatory: true }),
+      field('startDate', 'Start date', 'DATE'),
+      field('endDate', 'End date', 'DATE'),
+      field('visibility', 'Who can see it', 'PICKLIST', {
+        mandatory: true,
+        options: [
+          { id: 'PRIVATE', label: 'Private: only members and Admins', color: null, sortOrder: 1, defaultOption: false, active: true },
+          { id: 'PUBLIC', label: 'Public: every employee, read-only', color: null, sortOrder: 2, defaultOption: false, active: true },
+        ],
+      }),
+      field('description', 'Description', 'LONG_TEXT', { wide: true, config: { maxLength: 5000 } }),
+    ];
+  });
+
+  protected readonly detailValues = computed<Record<string, unknown>>(() => {
+    const p = this.detail()?.project;
+    return p ? { name: p.name, ownerUserId: p.ownerUserId, startDate: p.startDate, endDate: p.endDate, visibility: p.visibility, description: p.description } : {};
+  });
+
+  /** Saves one custom answer: only that key is sent (the server merges by key). */
   protected readonly saveValue: SaveValue = async (apiName, value, optimistic) => {
     const d = this.detail();
     if (!d) return;
-    const p = d.project;
-    const previous = p.customValues[apiName];
+    const previous = d.project.customValues[apiName];
     if (optimistic) this.applyValue(apiName, value);
     try {
-      const saved = await firstValueFrom(
-        this.projectApi.update(this.id(), {
-          name: p.name,
-          description: p.description,
-          ownerUserId: p.ownerUserId,
-          startDate: p.startDate,
-          endDate: p.endDate,
-          visibility: p.visibility,
-          customValues: { [apiName]: value },
-        }),
-      );
+      const saved = await firstValueFrom(this.projectApi.update(this.id(), { customValues: { [apiName]: value } }));
       this.applyValue(apiName, saved.customValues?.[apiName] ?? value);
     } catch (err) {
       if (optimistic) this.applyValue(apiName, previous);
-      const e = err as ApiError;
-      const detail = e.details?.[apiName];
-      throw new Error(typeof detail === 'string' ? detail : e.message);
+      throw this.fieldError(err, apiName);
     }
+    this.refreshActivity();
+  };
+
+  /** Saves one core property (name, owner, a date, who can see it, description): only that property is sent. */
+  protected readonly saveCore: SaveValue = async (property, value, optimistic) => {
+    const d = this.detail();
+    if (!d) return;
+    const previous = (d.project as unknown as Record<string, unknown>)[property];
+    if (optimistic) this.applyCore(property, value);
+    try {
+      const saved = await firstValueFrom(this.projectApi.update(this.id(), { [property]: value } as ProjectPatch));
+      this.applyCore(property, (saved as unknown as Record<string, unknown>)[property] ?? null);
+    } catch (err) {
+      if (optimistic) this.applyCore(property, previous);
+      throw this.fieldError(err, property);
+    }
+    this.refreshActivity();
+  };
+
+  /** The message to show under a value: the server's note for that property, else its general message. */
+  private fieldError(err: unknown, key: string): Error {
+    const e = err as ApiError;
+    const detail = e.details?.[key];
+    return new Error(typeof detail === 'string' ? detail : e.message);
+  }
+
+  private applyCore(property: string, value: unknown): void {
+    this.detail.update((cur) => (cur ? { ...cur, project: { ...cur.project, [property]: value } } : cur));
+  }
+
+  private refreshActivity(): void {
     this.projectApi.get(this.id()).subscribe({
       next: (fresh) => this.detail.update((cur) => (cur ? { ...cur, activity: fresh.activity } : cur)),
       error: () => {},
     });
-  };
+  }
 
   protected isCollapsed(section: LayoutSection): boolean {
     const d = this.detail();
