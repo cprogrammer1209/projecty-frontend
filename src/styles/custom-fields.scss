@@ -1,0 +1,151 @@
+/* M1 · Step 7 · Custom fields: the admin list, the field form, and the controls shown on the project form. */
+.cf-pad { padding: 0 18px 12px; }
+.cf-order { width: 64px; white-space: nowrap; }
+.cf-order .icon-x:disabled { opacity: .3; cursor: default; }
+.cf-sub { display: block; color: var(--py-ink-muted); font-size: 12px; }
+.cf-note { padding: 0 2px; }
+.users-page .mono, .mono { font-family: var(--py-font-mono); font-size: 12px; }
+.users-page .py-btn.disabled { pointer-events: none; opacity: .5; }
+.users-page .py-btn.danger { color: var(--py-status-blocked); }
+.users-page .filters { align-items: center; }
+.cf-req { font: 500 11px/16px var(--py-font-ui); color: var(--py-ink-muted); }
+.cf-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.cf-check input { width: 16px; height: 16px; accent-color: var(--py-brand); }
+.cf-multi { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+.cf-long { white-space: pre-wrap; }
+.cf-key { margin: -6px 0 0; font-size: 12px; color: var(--py-ink-muted); }
+.cf-rule { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.cf-rule input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--py-brand); }
+.cf-rule strong { display: block; font-weight: 500; font-size: 13px; }
+.cf-rule small { display: block; color: var(--py-ink-muted); font-size: 12px; }
+.cf-rule.off { opacity: .6; cursor: default; }
+.cf-opts { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.cf-opt { display: flex; align-items: center; gap: 6px; }
+.cf-opt input[type="text"] { flex: 1; min-width: 0; height: 34px; padding: 0 10px; border-radius: var(--py-radius-md); border: 1px solid var(--py-border-control); background: var(--py-surface-0); color: var(--py-ink); font: 400 14px/20px var(--py-font-ui); }
+.cf-opt input[type="text"]:focus { outline: 0; border-color: var(--py-brand); box-shadow: 0 0 1px 1px var(--py-brand); }
+.cf-opt.off input[type="text"] { color: var(--py-ink-muted); text-decoration: line-through; }
+.cf-opt .icon-x:disabled { opacity: .3; cursor: default; }
+.cf-opt .icon-x, .cf-order .icon-x { border: 0; background: none; color: var(--py-ink-muted); width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.cf-opt .icon-x:hover:not(:disabled), .cf-order .icon-x:hover:not(:disabled) { background: var(--py-surface-2); color: var(--py-ink); }
+.cf-section { display: flex; flex-direction: column; gap: 16px; }
+.cf-kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px 24px; padding: 4px 18px 18px; }
+.cf-kv dt { font-size: 11px; color: var(--py-ink-muted); margin-bottom: 3px; }
+.cf-kv dd { font-size: 13px; margin: 0; overflow-wrap: anywhere; }
+
+/* Linear-style properties on the project overview: quiet buttons, popovers, no Save or Cancel */
+/* Sections: as many columns as the card is wide (the browser works it out), one on a phone. Long text and pick several take the whole row. */
+.cf-props, .cf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 8px 28px; align-items: start; }
+.cf-props { padding: 6px 18px 18px; border-top: 1px solid var(--py-border); }
+.cf-grid { padding: 0; }
+.cf-props .prop { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.cf-props .prop.wide, .cf-grid .cf-item.wide { grid-column: 1 / -1; }
+.cf-item { min-width: 0; }
+.cf-props .lab { color: var(--py-ink-muted); font-size: 12px; padding-top: 6px; }
+.cf-props .cell { position: relative; min-height: 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.cf-props .pill { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 5px 9px; margin-left: -9px; border: 1px solid transparent; border-radius: 6px; background: none; color: var(--py-ink); text-align: left; cursor: pointer; font-size: 13px; line-height: 20px; }
+.cf-props .pill:hover, .cf-props .pill.open { background: var(--py-surface-2); }
+.cf-props .pill:focus-visible { outline: 0; border-color: var(--py-brand); }
+.cf-props .pill.empty { color: var(--py-ink-muted); }
+.cf-props .pv { padding: 5px 0; display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cf-props .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--py-brand); flex-shrink: 0; }
+.cf-props .av { width: 18px; height: 18px; border-radius: 50%; background: var(--py-brand); color: #fff; font-size: 9px; line-height: 18px; text-align: center; flex-shrink: 0; }
+.cf-props .box { width: 15px; height: 15px; border: 1px solid var(--py-border-control, var(--py-border)); border-radius: 4px; display: inline-grid; place-items: center; font-size: 10px; color: #fff; flex-shrink: 0; }
+.cf-props .box.on { background: var(--py-brand); border-color: var(--py-brand); }
+.cf-props .saved { color: var(--py-status-done); font-size: 12px; white-space: nowrap; }
+.cf-props .badge { margin: 0; }
+.cf-props .inl-wrap { width: 100%; max-width: 420px; margin-left: -1px; }
+.cf-props .inl { width: 100%; font: 400 14px/20px var(--py-font-ui); color: var(--py-ink); background: var(--py-surface-0); border: 1px solid var(--py-brand); border-radius: 6px; padding: 5px 9px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--py-brand) 22%, transparent); outline: 0; resize: vertical; }
+.cf-props .py-field__error { width: 100%; margin-top: 2px; }
+.cf-hint-line { font-size: 11px; color: var(--py-ink-muted); margin-top: 4px; }
+.cf-props .pop { position: absolute; z-index: 30; left: -9px; top: calc(100% + 2px); min-width: 240px; max-width: min(340px, 90vw); background: var(--py-surface-0); border: 1px solid var(--py-border); border-radius: 10px; box-shadow: var(--py-shadow-lg); padding: 6px; }
+.cf-props .pop .search { width: 100%; border: 0; border-bottom: 1px solid var(--py-border); border-radius: 0; background: none; color: var(--py-ink); font: 400 13px/20px var(--py-font-ui); padding: 7px 8px; margin-bottom: 4px; outline: 0; }
+.cf-props .list { max-height: 220px; overflow-y: auto; }
+.cf-props .opt { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border: 0; background: none; border-radius: 6px; text-align: left; font-size: 13px; color: var(--py-ink); cursor: pointer; }
+.cf-props .opt:hover { background: var(--py-surface-2); }
+.cf-props .opt.muted { color: var(--py-ink-muted); }
+.cf-props .opt .tick { margin-left: auto; color: var(--py-brand); }
+.cf-none { padding: 8px; font-size: 12px; color: var(--py-ink-muted); }
+.cf-hint { font-size: 11px; color: var(--py-ink-muted); padding: 6px 8px 2px; border-top: 1px solid var(--py-border); margin-top: 4px; }
+.cf-hint .opt { padding: 5px 0; }
+.cf-props .pop.cal { width: 256px; min-width: 0; padding: 8px; }
+.cf-props .pop .py-field__error { padding: 4px 8px; }
+.cal-h { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 8px; font-weight: 500; font-size: 13px; }
+.cal-h button { border: 0; background: none; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; color: var(--py-ink); }
+.cal-h button:hover { background: var(--py-surface-2); }
+.cal-g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 12px; }
+.cal-g .dow { color: var(--py-ink-muted); padding: 4px 0; }
+.cal-g button { border: 0; background: none; height: 30px; border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--py-ink); }
+.cal-g button:hover { background: var(--py-surface-2); }
+.cal-g button.sel { background: var(--py-brand); color: #fff; }
+.cal-g button.today { box-shadow: inset 0 0 0 1px var(--py-brand); }
+
+.cf-ro { font-size: 11px; color: var(--py-ink-muted); margin-left: 4px; }
+.cf-sections { display: flex; flex-direction: column; gap: 16px; }
+.cf-top { padding: 0 2px; }
+.cf-sections .panel-head { padding-bottom: 10px; }
+.sec-toggle { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; padding: 0; text-align: left; }
+.sec-toggle:hover { color: var(--py-brand); }
+.sec-toggle:focus-visible { outline: 2px solid var(--py-brand); border-radius: 4px; }
+.cf-card .cf-props { padding-top: 12px; }
+.cf-card:has(.panel-head + :not(.cf-props)) .panel-head { padding-bottom: 16px; }
+
+/* Layout editor */
+.lay .pf-grid { grid-template-columns: minmax(0, 1fr) 320px; }
+.lay-section { gap: 12px; transition: box-shadow .12s; }
+.lay-section.over, .lay-unplaced.over, .lay-section:has(.over), .lay-unplaced:has(.over) { box-shadow: 0 0 0 2px var(--py-brand); }
+.lay-section.over, .lay-unplaced.over { background: color-mix(in srgb, var(--py-brand) 5%, var(--py-surface-0)); }
+.lay-sec-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lay-sec-name { flex: 1; min-width: 160px; font: 600 15px/22px var(--py-font-ui); color: var(--py-ink); background: none; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; margin-left: -8px; }
+.lay-sec-name:hover { background: var(--py-surface-1); }
+.lay-sec-name:focus { outline: 0; border-color: var(--py-brand); background: var(--py-surface-0); box-shadow: 0 0 0 2px color-mix(in srgb, var(--py-brand) 22%, transparent); }
+.lay-fields { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.lay-row { border: 1px solid var(--py-border); border-radius: 8px; background: var(--py-surface-0); padding: 8px 10px; }
+.lay-row[draggable="true"] { cursor: grab; }
+.lay-row.dragging { opacity: .45; }
+.lay-row.off { opacity: .65; }
+.lay-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.grip { color: var(--py-ink-muted); letter-spacing: -2px; user-select: none; }
+.lay-name { flex: 1; min-width: 120px; }
+.lay-name strong { display: block; font-weight: 500; font-size: 13px; }
+.lay-name small { display: block; color: var(--py-ink-muted); font-size: 12px; }
+.lay-move { width: 118px; height: 30px; font-size: 12px; }
+.lay-row .icon-x { border: 0; background: none; color: var(--py-ink-muted); width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.lay-row .icon-x:hover:not(:disabled), .lay-sec-head .icon-x:hover:not(:disabled) { background: var(--py-surface-2); color: var(--py-ink); }
+.lay-sec-head .icon-x { border: 0; background: none; color: var(--py-ink-muted); width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.lay .icon-x:disabled { opacity: .3; cursor: default; }
+.lay-ov { margin-top: 10px; padding-top: 12px; border-top: 1px dashed var(--py-border); display: flex; flex-direction: column; gap: 12px; cursor: default; }
+.lay-empty { padding: 14px; border: 1px dashed var(--py-border); border-radius: 8px; font-size: 12px; color: var(--py-ink-muted); text-align: center; }
+.lay-unplaced { position: sticky; top: 72px; }
+.lay-preview { display: flex; flex-direction: column; gap: 16px; }
+.lay-preview .pf-card { background: var(--py-surface-1); }
+@media (max-width: 900px) { .lay .pf-grid { grid-template-columns: 1fr; } .lay-unplaced { position: static; } }
+
+/* Fields | Layouts */
+.cf-subtabs { display: flex; gap: 4px; margin-bottom: 4px; }
+.cf-subtabs a { padding: 6px 12px; border-radius: 99px; font-size: 13px; color: var(--py-ink-muted); text-decoration: none; }
+.cf-subtabs a:hover { background: var(--py-surface-2); }
+.cf-subtabs a.active { background: var(--py-brand-subtle); color: var(--py-brand); font-weight: 600; }
+
+
+a.layout-link{text-decoration:none;color:var(--py-ink-muted)}
+a.layout-link:hover{color:var(--py-brand);text-decoration:underline}
+
+/* Project settings */
+.ps-grid{display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:start}
+.ps-nav{display:flex;flex-direction:column;gap:2px;position:sticky;top:72px}
+.ps-nav a,.ps-nav button{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border:0;border-radius:var(--py-radius-md);background:none;color:var(--py-ink-muted);font:500 13px/18px var(--py-font-ui);text-align:left;text-decoration:none;cursor:pointer}
+.ps-nav a.active{background:var(--py-brand-subtle);color:var(--py-brand)}
+.ps-nav button:disabled{cursor:default;opacity:.65}
+.ps-nav .soon{font-size:10.5px;border:1px solid var(--py-border);border-radius:99px;padding:0 6px}
+.ps-layouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.ps-layouts .radio-card small{display:block;color:var(--py-ink-muted);font-size:12px;margin-top:2px}
+.ps-layouts .radio-card strong{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ps-tag{font:500 11px/16px var(--py-font-ui);border:1px solid var(--py-border);border-radius:99px;padding:0 7px;color:var(--py-ink-muted)}
+.ps-tag.cur{color:var(--py-brand);border-color:var(--py-brand)}
+.ps-secs{display:flex;flex-direction:column;gap:6px;margin:0;padding:12px 14px;border:1px solid var(--py-border);border-radius:var(--py-radius-md);background:var(--py-surface-1);font-size:13px}
+.ps-secs div{display:flex;gap:8px}.ps-secs b{min-width:110px;font-weight:600}.ps-secs span{color:var(--py-ink-muted)}
+.ps-impact{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.ps-impact p{margin:0;padding:8px 12px;border-radius:var(--py-radius-md);background:var(--py-surface-1);border:1px solid var(--py-border)}
+.ps-actions{display:flex;gap:8px;align-items:center}
+@media (max-width:800px){.ps-grid{grid-template-columns:1fr}.ps-nav{position:static;flex-direction:row;flex-wrap:wrap}}
+.ps-h{font:600 12px/16px var(--py-font-ui);color:var(--py-ink-muted);margin:0 0 6px}

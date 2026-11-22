@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { unwrap } from '../api/api-error';
 import { AppResponse } from '../api/api.types';
+import { Layout } from '../customfield/layout.api';
 
 export type ProjectVisibility = 'PUBLIC' | 'PRIVATE';
 export type ProjectRole = 'MANAGER' | 'MEMBER';
@@ -30,6 +31,10 @@ export interface Project {
   /** Set only for projects in the trash. */
   deletedAt: string | null;
   deletedByUserId: string | null;
+  /** Answers to the custom fields of the project's layout, keyed by each field's apiName. */
+  customValues: Record<string, unknown>;
+  /** The layout the project uses. */
+  layoutId: string;
 }
 
 /** Work stores only the user id; names come from the portal's people (PortalPeople). */
@@ -52,6 +57,10 @@ export interface ProjectDetail {
   project: Project;
   members: ProjectMember[];
   activity: ProjectActivity[];
+  /** The project's layout, resolved: sections with their active fields and the layout's rules. */
+  layout: Layout;
+  /** Answers of active fields the layout does not show: kept, and shown again if a layout has them. */
+  hiddenValues: Record<string, unknown>;
 }
 
 export interface ProjectStatus {
@@ -69,10 +78,14 @@ export interface ProjectInput {
   endDate: string | null;
   visibility: ProjectVisibility;
   description: string;
+  /** Answers keyed by apiName; a null value clears that key. Keys left out are untouched on update. */
+  customValues?: Record<string, unknown>;
+  /** Create only: the layout to use; the portal's default layout when absent. */
+  layoutId?: string | null;
 }
 
-/** The key never changes after creation, so edits don't send it. */
-export type ProjectUpdate = Omit<ProjectInput, 'key'>;
+/** The key never changes after creation, and the layout is changed in the project settings. */
+export type ProjectUpdate = Omit<ProjectInput, 'key' | 'layoutId'>;
 
 /** The Work service: projects of the active portal (X-Portal-Id). Served under /api/work. */
 @Injectable({ providedIn: 'root' })
@@ -97,6 +110,11 @@ export class ProjectApi {
 
   update(id: string, input: ProjectUpdate): Observable<Project> {
     return this.http.patch<AppResponse<Project>>(`/api/work/projects/${id}`, input).pipe(unwrap());
+  }
+
+  /** Applies another layout. Answers for fields the layout does not show are kept. */
+  changeLayout(id: string, layoutId: string): Observable<ProjectDetail> {
+    return this.http.put<AppResponse<ProjectDetail>>(`/api/work/projects/${id}/layout`, { layoutId }).pipe(unwrap());
   }
 
   changeStatus(id: string, status: string): Observable<Project> {

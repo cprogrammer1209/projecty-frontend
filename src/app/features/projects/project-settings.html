@@ -1,0 +1,92 @@
+@if (missing()) {
+  <section class="panel">
+    <div class="not-found">
+      <b>Project not found</b><br />It doesn't exist, was moved to the trash, or you can't see it.<br /><br />
+      <a class="py-btn py-btn--secondary" [routerLink]="['/p', active.portal()?.slug, 'projects']">Back to projects</a>
+    </div>
+  </section>
+} @else if (detail(); as d) {
+  <a class="back" [routerLink]="['/p', active.portal()?.slug, 'projects', d.project.id]"><py-icon name="arrow-left" />{{ d.project.name }}</a>
+  <div class="page-title">
+    <div>
+      <h1>Project settings</h1>
+      <p><span class="mono">{{ d.project.key }}</span> · {{ d.project.name }}</p>
+    </div>
+  </div>
+
+  @if (error(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+  @if (notice(); as message) {
+    <div class="py-alert py-alert--ok" role="status"><py-icon name="check" /><span>{{ message }}</span></div>
+  }
+  @if (!d.project.canEdit) {
+    <div class="py-alert" role="status"><py-icon name="alert" /><span>Only Admins, the owner and project Managers can change these settings.</span></div>
+  }
+
+  <div class="ps-grid">
+    <nav class="ps-nav" aria-label="Project settings">
+      <a class="active" href="" aria-current="page" (click)="$event.preventDefault()">Layout</a>
+      <button type="button" disabled>Modules <span class="soon">Soon</span></button>
+      <button type="button" disabled>Statuses <span class="soon">Soon</span></button>
+      <button type="button" disabled>Notifications <span class="soon">Soon</span></button>
+    </nav>
+
+    <section class="panel pf-card">
+      <h2>Layout</h2>
+      <p class="pf-sub">The layout decides which extra fields this project shows, and how they are grouped. Admins create and edit layouts in Settings → Projects → Layouts.</p>
+      <div class="ps-layouts" role="radiogroup" aria-label="Layout">
+        @for (l of layouts(); track l.id) {
+          <label class="radio-card">
+            <input type="radio" name="layout" [value]="l.id" [checked]="l.id === selected()" [disabled]="!d.project.canEdit" (change)="choose(l.id)" />
+            <span>
+              <strong>{{ l.name }}@if (l.id === d.project.layoutId) { <span class="ps-tag cur">Current</span> }@if (l.defaultLayout) { <span class="ps-tag">Default</span> }@if (!l.active) { <span class="ps-tag">Inactive</span> }</strong>
+              <small>{{ l.description || 'No description' }} · {{ l.sections.length }} section{{ l.sections.length === 1 ? '' : 's' }} · {{ countFields(l) }} field{{ countFields(l) === 1 ? '' : 's' }}</small>
+            </span>
+          </label>
+        }
+      </div>
+
+      @if (picked(); as pick) {
+        <div>
+          <h3 class="ps-h">{{ pick.name }} shows</h3>
+          <div class="ps-secs">
+            @for (s of shows(); track s.id) {
+              <div><b>{{ s.name }}</b><span>@for (f of s.fields; track f.apiName) { {{ f.label }}{{ $last ? '' : ',' }} }</span></div>
+            } @empty {
+              <span>No fields yet.</span>
+            }
+          </div>
+        </div>
+      }
+
+      @if (changed()) {
+        <div class="ps-impact" aria-live="polite">
+          @let im = impact();
+          @if (im.hidden.length) {
+            <p><b>Kept, but hidden:</b> the answers for {{ im.hidden.join(', ') }}. They come back if the project moves to a layout that has those fields.</p>
+          }
+          @if (im.needs.length) {
+            <p><b>Required here and still empty:</b> {{ im.needs.join(', ') }}. You will be asked for them the next time the project is edited.</p>
+          }
+          @if (!im.hidden.length && !im.needs.length) {
+            <p>Nothing is hidden and nothing new is required.</p>
+          }
+        </div>
+      }
+
+      @if (d.project.canEdit) {
+        <div class="ps-actions">
+          <button class="py-btn py-btn--primary" type="button" id="apply" [disabled]="!changed() || busy()" (click)="apply()">
+            @if (busy()) { <span class="py-spinner" aria-hidden="true"></span> }Apply layout
+          </button>
+          @if (changed()) { <button class="py-btn py-btn--ghost" type="button" id="reset" (click)="reset()">Cancel</button> }
+        </div>
+      }
+    </section>
+  </div>
+} @else if (error()) {
+  <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ error() }}</span></div>
+} @else {
+  <p class="py-caption">Loading…</p>
+}

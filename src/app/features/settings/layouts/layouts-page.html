@@ -1,0 +1,101 @@
+<header class="ph">
+  <div>
+    <div class="crumb">Projects</div>
+    <h1>Layouts</h1>
+    <p>Layouts decide which fields appear on the project form, and how they are grouped.</p>
+  </div>
+  @if (canManage) {
+    <button class="btn primary" type="button" (click)="openDialog()"><py-icon name="plus" /> New layout</button>
+  }
+</header>
+
+@if (notice(); as n) {
+  <div class="notice" [class.err]="n.kind === 'err'" role="alert">
+    <span>{{ n.text }}</span>
+    <button type="button" aria-label="Dismiss" (click)="dismiss()"><py-icon name="x" /></button>
+  </div>
+}
+
+<div class="group">
+  @for (l of items() ?? []; track l.id) {
+    <div class="lrow" [class.off]="!l.active">
+      @if (canManage) {
+        <a class="lmain" [routerLink]="[l.id]">
+          <ng-container [ngTemplateOutlet]="main" [ngTemplateOutletContext]="{ $implicit: l }" />
+        </a>
+        <button
+          class="ibtn more"
+          type="button"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="menu()?.layout?.id === l.id ? 'true' : null"
+          [attr.aria-label]="'Actions for ' + l.name"
+          (click)="openMenu(l, $event)"
+        >
+          <py-icon name="more" />
+        </button>
+      } @else {
+        <div class="lmain">
+          <ng-container [ngTemplateOutlet]="main" [ngTemplateOutletContext]="{ $implicit: l }" />
+        </div>
+      }
+    </div>
+  } @empty {
+    <div class="srow"><div class="l muted">{{ items() ? 'No layouts.' : 'Loading layouts…' }}</div></div>
+  }
+</div>
+
+<ng-template #main let-l>
+  <div class="t">
+    {{ l.name }}
+    @if (l.defaultLayout) { <span class="chip acc">Default</span> }
+    @if (!l.active) { <span class="chip">Inactive</span> }
+  </div>
+  <div class="d">{{ l.description || 'No description' }}</div>
+  <div class="m">
+    {{ plural(l.sectionCount, 'section') }} · {{ plural(l.fieldCount, 'field') }} · Used by {{ plural(l.usage, 'project') }}
+  </div>
+</ng-template>
+
+<p class="foot">
+  {{ items()?.length ?? 0 }} of {{ max }} layouts. Layouts are deactivated, never deleted. A field that isn't in a
+  project's layout is hidden for that project, and its answer is kept.
+</p>
+@if (!canManage) {
+  <p class="foot">Only Admins can add or change layouts.</p>
+}
+
+<py-popover [open]="!!menu()" [anchor]="menu()?.anchor ?? null" [alignEnd]="true" label="Layout actions" (closed)="closeMenu()">
+  @if (menu(); as m) {
+    <div class="lay-menu" role="menu" tabindex="-1" (keydown)="menuKeys($event)">
+      <button class="mi" role="menuitem" type="button" (click)="edit(m.layout)"><py-icon name="layouts" /> Edit</button>
+      <button class="mi" role="menuitem" type="button" (click)="openDialog(m.layout)"><py-icon name="templates" /> Clone…</button>
+      <button class="mi" [class.soft]="m.layout.defaultLayout || !m.layout.active" role="menuitem" type="button" (click)="makeDefault(m.layout)"><py-icon name="check" /> Make default</button>
+      <button class="mi" [class.soft]="m.layout.defaultLayout" [class.danger]="!m.layout.defaultLayout && m.layout.active" role="menuitem" type="button" (click)="toggle(m.layout)">
+        <py-icon [name]="m.layout.active ? 'x' : 'plus'" /> {{ m.layout.active ? 'Deactivate' : 'Activate' }}
+      </button>
+    </div>
+  }
+</py-popover>
+
+<py-dialog [open]="dialogOpen()" [label]="cloning() ? 'Clone layout' : 'New layout'" (closed)="closeDialog()">
+  <div class="dlg lay-dlg">
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <h2>{{ cloning() ? 'Clone layout' : 'New layout' }}</h2>
+      <label class="fl">Name<input class="in" formControlName="name" autocomplete="off" placeholder="e.g. Client onboarding" /></label>
+      <fieldset>
+        <label class="opt"><input type="radio" formControlName="start" value="blank" /> Start blank</label>
+        <label class="opt">
+          <input type="radio" formControlName="start" value="copy" /> Start from a copy of
+          <select class="in" formControlName="from" aria-label="Layout to copy">
+            @for (l of items() ?? []; track l.id) { <option [value]="l.id">{{ l.name }}</option> }
+          </select>
+        </label>
+      </fieldset>
+      @if (dialogError(); as e) { <p class="err" role="alert">{{ e }}</p> }
+      <div class="dlg-f">
+        <button class="btn" type="button" (click)="closeDialog()">Cancel</button>
+        <button class="btn primary" type="submit" [disabled]="busy()">{{ cloning() ? 'Clone' : 'Create layout' }}</button>
+      </div>
+    </form>
+  </div>
+</py-dialog>

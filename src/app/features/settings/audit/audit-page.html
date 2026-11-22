@@ -3,13 +3,6 @@
 }
 
 <section class="panel">
-  <div class="panel-head">
-    <div>
-      <h2>Audit log</h2>
-      <p>Every change to portal settings and people in {{ active.portal()?.name }}. Entries can't be edited or deleted.</p>
-    </div>
-  </div>
-
   <div class="filters">
     <select class="py-select status" aria-label="Filter by action" (change)="onAction($event)">
       <option value="">All actions</option>

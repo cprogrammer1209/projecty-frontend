@@ -1,5 +1,7 @@
 /* Shared by the four Projects pages (ported from prototype/m1/step4/css/projects.css and settings.css). */
-:host { display: flex; flex-direction: column; gap: 16px; max-width: 1180px; }
+:host { display: flex; flex-direction: column; gap: 16px; }
+/* The create/edit form keeps a readable width; the list, overview and trash fill the page. */
+:host(.form-page) { max-width: 1100px; }
 
 /* Page heading */
 .page-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
@@ -120,3 +122,6 @@ tr.click:hover td { background: var(--py-surface-1); }
   .pf-side { position: static; order: -1; }
 }
 @media (max-width: 560px) { .pf-row, .radio-cards { grid-template-columns: 1fr; } }
+.pf-layout { margin: 0; font-size: 12px; color: var(--py-ink-muted); }
+.pf-layout b { color: var(--py-ink); font-weight: 600; }
+.ps-layouts .radio-card strong { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }

@@ -1,0 +1,306 @@
+@switch (status()) {
+  @case ('loading') {
+    <p class="muted">Loading layout…</p>
+  }
+  @case ('missing') {
+    <header class="ph"><div><h1>Layout not found</h1><p>{{ loadError() }}</p></div></header>
+    <a class="btn" routerLink="..">Back to layouts</a>
+  }
+  @case ('error') {
+    <header class="ph"><div><h1>Could not load the layout</h1><p>{{ loadError() }}</p></div></header>
+    <a class="btn" routerLink="..">Back to layouts</a>
+  }
+  @case ('ready') {
+    @if (draft(); as d) {
+      <div class="builder cvb">
+        <div class="cv-top">
+          <div class="cv-title">
+            <div class="btop"><span id="crumb"><a routerLink="..">Layouts</a> / {{ d.name || 'Untitled' }}</span></div>
+            <input class="btitle" [value]="d.name" placeholder="Layout name" aria-label="Layout name" (input)="setTitle($any($event.target).value)" />
+            <div class="bmeta">
+              @if (d.defaultLayout) { <span class="chip acc">Default</span> }
+              @if (!d.active) { <span class="chip">Inactive</span> }
+              <span class="chip">Used by {{ plural(d.usage, 'project') }}</span>
+            </div>
+          </div>
+          <div class="cv-modes">
+            @if (view() === 'edit' && canManage) {
+              <button class="btn" type="button" id="top-new-field" (click)="openFieldDialog()"><py-icon name="plus" /> New field</button>
+            }
+            <div class="segc" role="tablist" aria-label="View">
+              <button type="button" role="tab" [attr.aria-selected]="view() === 'edit'" (click)="view.set('edit')">Edit</button>
+              <button type="button" role="tab" [attr.aria-selected]="view() === 'preview'" (click)="view.set('preview')">Preview</button>
+            </div>
+            @if (view() === 'preview') {
+              <div class="segc" role="group" aria-label="Screen width">
+                @for (x of devices; track x.id) {
+                  <button type="button" [attr.aria-pressed]="device() === x.id" (click)="device.set(x.id)">{{ x.label }}</button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div id="problem" role="alert" [hidden]="!problem()">{{ problem() }}</div>
+
+        <div class="cv-main" [class.is-preview]="view() === 'preview'">
+          <div class="cv-canvas" id="canvas">
+            @if (view() === 'preview') {
+              <div class="cv-device" [style.max-width.px]="deviceWidth()">
+                @for (s of previewSections(); track $index) {
+                  <section class="cv-pv-sec">
+                    <h3>{{ s.name }}</h3>
+                    @if (s.items.length) {
+                      <div class="cf-grid">
+                        @for (it of s.items; track it.key) {
+                          <div class="cf-item" [class.wide]="it.wide">
+                            <py-custom-value [field]="it.field" [value]="it.value" [disabled]="!!it.field.readOnly" />
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="pv-empty">No fields</p>
+                    }
+                  </section>
+                }
+              </div>
+            } @else {
+              @for (s of d.sections; track s.id; let i = $index) {
+                <section class="cv-sec" [attr.data-sec]="s.id" [attr.aria-label]="'Section ' + s.name">
+                  <div class="cv-sec-h">
+                    <input class="sec-name" [value]="s.name" placeholder="Section name" aria-label="Section name" (input)="setSectionName(s.id, $any($event.target).value)" />
+                    <label class="sw"><input type="checkbox" class="sec-coll" [checked]="s.collapsible" (change)="setCollapsible(s.id, $any($event.target).checked)" /> Collapsible</label>
+                    <span class="cnt">{{ plural(s.fields.length, 'field') }}</span>
+                    <span class="sec-tools">
+                      <button class="ibtn" type="button" data-act="sec-up" aria-label="Move section up" [disabled]="i === 0" (click)="moveSection(s.id, -1)"><py-icon name="up" /></button>
+                      <button class="ibtn" type="button" data-act="sec-down" aria-label="Move section down" [disabled]="i === d.sections.length - 1" (click)="moveSection(s.id, 1)"><py-icon name="down" /></button>
+                      <button class="ibtn" type="button" data-act="sec-del" aria-label="Delete section" [disabled]="d.sections.length === 1" (click)="deleteSection(s.id)"><py-icon name="trash" /></button>
+                    </span>
+                  </div>
+                  <div class="cv-grid" role="list" [attr.data-drop]="s.id" [class.over]="overZone() === s.id" (dragover)="dragOver($event)" (drop)="drop($event)">
+                    @for (p of s.fields; track p.apiName) {
+                      @let f = fieldMap().get(p.apiName);
+                      @if (f) {
+                        @let e = effective(d, f);
+                        @let wide = isWideOf(d, f);
+                        <div
+                          class="fcard"
+                          role="listitem"
+                          draggable="true"
+                          [attr.data-key]="p.apiName"
+                          [class.wide]="wide"
+                          [class.sel]="sel() === p.apiName"
+                          [class.inactive]="f.status !== 'ACTIVE'"
+                          [class.dragging]="dragKey() === p.apiName"
+                          [class.ins-before]="mark() === p.apiName + ':before'"
+                          [class.ins-after]="mark() === p.apiName + ':after'"
+                          [attr.tabindex]="sel() === p.apiName ? 0 : -1"
+                          (click)="select(p.apiName, false)"
+                          (dblclick)="onDblClick($event, p.apiName)"
+                          (dragstart)="dragStart($event, p.apiName)"
+                          (dragend)="dragEnd()"
+                        >
+                          <div class="fc-h">
+                            <span class="grip" aria-hidden="true"><py-icon name="grip" /></span>
+                            <span class="fc-label">{{ f.label }}@if (e.mandatory) { <b class="req"> *</b> }</span>
+                            <span class="fc-type">{{ typeLabel[f.fieldType] }}</span>
+                            <span class="fc-tools">
+                              <button class="ibtn" type="button" [attr.aria-label]="wide ? 'Make half width' : 'Make full width'" [title]="wide ? 'Full width: click for half' : 'Half width: click for full'" (click)="toggleWidth(p.apiName)"><py-icon [name]="wide ? 'shrink' : 'expand'" /></button>
+                              <button class="ibtn" type="button" [attr.aria-label]="'Settings for ' + f.label" title="Settings (O)" (click)="openSettings(p.apiName)"><py-icon name="prefs" /></button>
+                              <button class="ibtn" type="button" [attr.aria-label]="'Remove ' + f.label + ' from the layout'" title="Remove from layout (Del)" (click)="hide(p.apiName)"><py-icon name="x" /></button>
+                            </span>
+                          </div>
+                          <div class="fc-body">
+                            @switch (f.fieldType) {
+                              @case ('LONG_TEXT') { <i class="sk tall"></i> }
+                              @case ('CHECKBOX') { <i class="sk box"></i> }
+                              @case ('MULTI_PICKLIST') { <span class="sk-row"><i class="sk pill"></i><i class="sk pill"></i><i class="sk pill"></i></span> }
+                              @case ('PICKLIST') { <i class="sk sel"></i> }
+                              @case ('USER') { <i class="sk sel"></i> }
+                              @default { <i class="sk"></i> }
+                            }
+                          </div>
+                          @if (p.mandatory === true || (p.mandatory === false && f.mandatory) || p.readOnly || hasDefault(p) || f.status !== 'ACTIVE') {
+                            <div class="chips">
+                              @if (p.mandatory === true) { <span class="chip acc">Required here</span> }
+                              @else if (p.mandatory === false && f.mandatory) { <span class="chip acc">Optional here</span> }
+                              @if (p.readOnly) { <span class="chip acc">Read-only</span> }
+                              @if (hasDefault(p)) { <span class="chip acc">Default: {{ defaultLabel(f, p.defaultValue) }}</span> }
+                              @if (f.status !== 'ACTIVE') { <span class="chip warn">Inactive</span> }
+                            </div>
+                          }
+                        </div>
+                      }
+                    } @empty {
+                      <div class="cv-empty">Drop a field here</div>
+                    }
+                  </div>
+                </section>
+              }
+              <button class="cv-add" type="button" (click)="addSection()"><py-icon name="plus" /> Add a section</button>
+              <p class="cv-note">
+                The canvas shows two columns. On the real form, a section shows as many columns as fit the screen; a
+                half-width field takes one, a full-width field takes the whole row.
+              </p>
+            }
+          </div>
+
+          @if (view() === 'edit') {
+            <aside class="cv-side" id="side" aria-label="Fields and settings">
+              <div class="segc side-tabs" role="tablist" aria-label="Side panel">
+                <button type="button" role="tab" [attr.aria-selected]="tab() === 'fields'" (click)="tab.set('fields')">Fields ({{ free().length }})</button>
+                <button type="button" role="tab" [attr.aria-selected]="tab() === 'types'" (click)="tab.set('types')">New</button>
+                <button type="button" role="tab" [attr.aria-selected]="tab() === 'field'" (click)="tab.set('field')">Settings</button>
+              </div>
+
+              @switch (tab()) {
+                @case ('field') {
+                  @if (selected(); as s) {
+                    <div class="ins" data-ins>
+                      <div class="ins-h">
+                        <div><b>{{ s.field.label }}</b><span class="muted">{{ typeLabel[s.field.fieldType] }} · in {{ s.at.section.name || 'Untitled section' }}</span></div>
+                      </div>
+                      <p class="muted ins-note">These settings apply to this layout only.</p>
+                      @let mand = s.at.placement.mandatory === true ? 'true' : s.at.placement.mandatory === false ? 'false' : '';
+                      <label class="k" id="lbl-req">Required</label>
+                      <div class="seg" role="radiogroup" aria-labelledby="lbl-req">
+                        <label><input type="radio" name="req" [checked]="mand === ''" (change)="setRequired('')" />Same as field ({{ s.field.mandatory ? 'required' : 'optional' }})</label>
+                        <label><input type="radio" name="req" [checked]="mand === 'true'" (change)="setRequired('true')" />Required here</label>
+                        <label><input type="radio" name="req" [checked]="mand === 'false'" (change)="setRequired('false')" />Optional here</label>
+                      </div>
+                      <label class="k" id="lbl-width">Width</label>
+                      <div class="seg" role="radiogroup" aria-labelledby="lbl-width">
+                        <label><input type="radio" name="width" [checked]="!s.wide" (change)="setWidth(false)" />Half (one column)</label>
+                        <label><input type="radio" name="width" [checked]="s.wide" (change)="setWidth(true)" />Full (whole row)</label>
+                      </div>
+                      <label class="sw ro-row">Read-only<input type="checkbox" [checked]="s.at.placement.readOnly" (change)="setReadOnly($any($event.target).checked)" /></label>
+                      @if (s.field.unique) {
+                        <p class="muted ins-note">Unique fields cannot have a default value.</p>
+                      } @else if (s.field.fieldType === 'USER' || s.field.fieldType === 'MULTI_PICKLIST') {
+                        <p class="muted ins-note">This field type cannot have a default value.</p>
+                      } @else {
+                        <label class="k" for="ins-def">Default value</label>
+                        @switch (s.field.fieldType) {
+                          @case ('CHECKBOX') {
+                            <label class="sw"><input id="ins-def" type="checkbox" [checked]="s.at.placement.defaultValue === true" (change)="setDefault(s.field, $any($event.target).checked)" /> Checked by default</label>
+                          }
+                          @case ('PICKLIST') {
+                            <select id="ins-def" class="in" aria-label="Default value" (change)="setDefault(s.field, $any($event.target).value)">
+                              <option value="" [selected]="!s.at.placement.defaultValue">None</option>
+                              @for (o of s.field.options; track o.id) {
+                                @if (o.active) { <option [value]="o.id" [selected]="o.id === s.at.placement.defaultValue">{{ o.label }}</option> }
+                              }
+                            </select>
+                          }
+                          @default {
+                            <input id="ins-def" class="in" aria-label="Default value" placeholder="No default" autocomplete="off"
+                              [type]="s.field.fieldType === 'DATE' ? 'date' : s.field.fieldType === 'NUMBER' || s.field.fieldType === 'DECIMAL' ? 'number' : 'text'"
+                              [attr.step]="s.field.fieldType === 'DECIMAL' ? 'any' : null"
+                              [value]="s.at.placement.defaultValue ?? ''"
+                              (input)="setDefault(s.field, $any($event.target).value)" />
+                          }
+                        }
+                      }
+                      <label class="k" for="ins-sec">Section</label>
+                      <select id="ins-sec" class="in" aria-label="Move to section" (change)="moveToSection($any($event.target).value)">
+                        @for (x of d.sections; track x.id) {
+                          <option [value]="x.id" [selected]="x.id === s.at.section.id">{{ x.name || 'Untitled section' }}</option>
+                        }
+                      </select>
+                      <button class="btn rm-btn" type="button" (click)="hide(s.field.apiName)"><py-icon name="x" /> Remove from layout</button>
+                    </div>
+                  } @else {
+                    <p class="muted side-empty">Select a field on the canvas to change its settings. Double-click a field, or press O.</p>
+                  }
+                }
+                @case ('types') {
+                  <div class="pal-side">
+                    <div class="ins-h pal-h"><div><b>Create a field</b><span class="muted">Drag a type onto a section. You will name it, and it is created and placed there.</span></div></div>
+                    <div class="pcards" role="list">
+                      @for (t of fieldTypes; track t.id) {
+                        <div class="pcard tcard" role="listitem" draggable="true" (dragstart)="dragStart($event, '__new:' + t.id)" (dragend)="dragEnd()">
+                          <span class="grip" aria-hidden="true"><py-icon name="grip" /></span>
+                          <span class="pc-main"><b>{{ t.label }}</b></span>
+                          <button class="ibtn" type="button" [attr.aria-label]="'Create a ' + t.label + ' field'" [title]="'Create a ' + t.label + ' field'" (click)="openFieldDialog({ type: t.id })"><py-icon name="plus" /></button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+                @default {
+                  <div class="pal-side">
+                    <div class="ins-h pal-h"><div><b>Fields not on this layout</b><span class="muted">Drag one onto the canvas, or press +. Their answers are kept.</span></div></div>
+                    <input class="in" placeholder="Search fields…" aria-label="Search fields" autocomplete="off" [value]="query()" (input)="query.set($any($event.target).value)" />
+                    <div class="pcards" role="list" data-drop="unplaced" [class.over]="overZone() === 'unplaced'" (dragover)="dragOver($event)" (drop)="drop($event)">
+                      @for (f of palette(); track f.apiName) {
+                        <div class="pcard" role="listitem" draggable="true" [class.inactive]="f.status !== 'ACTIVE'" [class.dragging]="dragKey() === f.apiName" (dragstart)="dragStart($event, f.apiName)" (dragend)="dragEnd()">
+                          <span class="grip" aria-hidden="true"><py-icon name="grip" /></span>
+                          <span class="pc-main"><b>{{ f.label }}</b><small>{{ typeLabel[f.fieldType] }}{{ f.status !== 'ACTIVE' ? ' · inactive' : '' }}</small></span>
+                          <button class="ibtn" type="button" [attr.aria-label]="'Add ' + f.label + ' to the last section'" title="Add to the last section" (click)="addToLast(f.apiName)"><py-icon name="plus" /></button>
+                        </div>
+                      } @empty {
+                        <div class="cv-empty">{{ query() ? 'No match.' : 'Every field is on this layout.' }}</div>
+                      }
+                    </div>
+                    @if (canManage) {
+                      <button class="btn new-btn" type="button" (click)="openFieldDialog()"><py-icon name="plus" /> New field</button>
+                    }
+                  </div>
+                }
+              }
+            </aside>
+          }
+        </div>
+
+        <div class="hints" aria-label="Keyboard shortcuts">
+          <span><kbd>↑</kbd><kbd>↓</kbd><em>select</em></span>
+          <span><kbd>M</kbd><em>move to…</em></span>
+          <span><kbd>{{ mod }}</kbd><kbd>↑</kbd><kbd>↓</kbd><em>reorder</em></span>
+          <span><kbd>W</kbd><em>half or full width</em></span>
+          <span><kbd>O</kbd><em>settings</em></span>
+          <span><kbd>Del</kbd><em>remove</em></span>
+        </div>
+      </div>
+    }
+  }
+}
+
+<py-popover [open]="!!moveFor()" [anchor]="moveFor()?.anchor ?? null" label="Move field" (closed)="closeMove()">
+  @if (moveFor(); as m) {
+    <div class="mv">
+      <div class="pop-h">Move “{{ fieldMap().get(m.key)?.label }}” to…</div>
+      <input class="in" placeholder="Search sections…" aria-label="Search sections" autocomplete="off" [value]="moveQuery()" (input)="moveInput($any($event.target).value)" (keydown)="moveKeys($event)" />
+      <ul role="listbox" aria-label="Sections">
+        @for (o of moveOptions(); track o.id; let i = $index) {
+          <li role="option" [class.act]="moveAct() === i" [attr.aria-selected]="moveAct() === i" (click)="pickMove(o.id)">
+            <py-icon [name]="o.icon" /><span>{{ o.label }}</span>
+            @if (o.current) { <span class="cur">current</span> }
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</py-popover>
+
+<py-dialog [open]="!!fieldDialog()" label="New field" (closed)="closeFieldDialog()">
+  <div class="dlg lay-dlg">
+    <form [formGroup]="fieldForm" (ngSubmit)="createField()">
+      <h2>New field</h2>
+      <label class="fl">Label<input class="in" formControlName="label" autocomplete="off" placeholder="e.g. Region" /></label>
+      <label class="fl">Type
+        <select class="in" formControlName="type">
+          @for (t of fieldTypes; track t.id) { <option [value]="t.id">{{ t.label }}</option> }
+        </select>
+      </label>
+      @if (isPick(fieldType())) {
+        <label class="fl">Choices, one per line<textarea class="in" formControlName="opts" rows="3" placeholder="Low&#10;Medium&#10;High"></textarea></label>
+      }
+      <label class="opt"><input type="checkbox" formControlName="req" /> Required by default</label>
+      @if (fieldError(); as e) { <p class="err" role="alert">{{ e }}</p> }
+      <div class="dlg-f">
+        <button class="btn" type="button" (click)="closeFieldDialog()">Cancel</button>
+        <button class="btn primary" type="submit" [disabled]="fieldBusy()">Create field</button>
+      </div>
+    </form>
+  </div>
+</py-dialog>

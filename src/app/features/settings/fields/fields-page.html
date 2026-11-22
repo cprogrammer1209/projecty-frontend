@@ -1,0 +1,109 @@
+@if (!canManage) {
+  <div class="py-alert" role="status"><py-icon name="alert" /><span>Only Admins can add or change custom fields.</span></div>
+}
+@if (error(); as message) {
+  <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+}
+
+<div class="group">
+  <div class="fl-head">
+    <strong>@if (items()) { {{ total() }} of {{ max }} fields used } @else { Fields }</strong>
+    <label class="fl-check">
+      <input type="checkbox" [checked]="showInactive()" (change)="showInactive.set($any($event.target).checked)" />
+      <span>Show inactive fields</span>
+    </label>
+    @if (canManage) {
+      @if (total() >= max) {
+        <button class="btn primary" type="button" disabled title="A module can have at most {{ max }} fields."><py-icon name="plus" />New field</button>
+      } @else {
+        <a class="btn primary" [routerLink]="newLink()"><py-icon name="plus" />New field</a>
+      }
+    }
+  </div>
+  <div class="tblwrap">
+    <table class="tbl">
+      <thead>
+        <tr>
+          @if (canManage) { <th><span class="sr-only">Order</span></th> }
+          <th>Field</th>
+          <th>Type</th>
+          <th>Rules</th>
+          <th>Status</th>
+          @if (canManage) { <th><span class="sr-only">Actions</span></th> }
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of shown(); track f.id) {
+          <tr [class.off]="f.status !== 'ACTIVE'">
+            @if (canManage) {
+              <td class="fl-order">
+                <button class="icon-x" type="button" [attr.aria-label]="'Move ' + f.label + ' up'" [disabled]="busy() || index(f) === 0" (click)="move(f, -1)"><py-icon name="up" /></button>
+                <button class="icon-x" type="button" [attr.aria-label]="'Move ' + f.label + ' down'" [disabled]="busy() || index(f) === total() - 1" (click)="move(f, 1)"><py-icon name="down" /></button>
+              </td>
+            }
+            <td>
+              <strong>{{ f.label }}</strong>
+              <small class="fl-sub"><span class="mono">{{ f.apiName }}</span>@if (f.description) { · {{ f.description }} }</small>
+            </td>
+            <td>
+              {{ typeLabel(f.fieldType) }}
+              @if (choiceCount(f); as n) { <small class="fl-sub">{{ n }}</small> }
+            </td>
+            <td>
+              <span class="chips">
+                @if (f.mandatory) { <span class="chip">Required</span> }
+                @if (f.unique) { <span class="chip">Unique</span> }
+                @if (f.sensitive) { <span class="chip">Sensitive</span> }
+                @if (!f.mandatory && !f.unique && !f.sensitive) { <span class="muted">None</span> }
+              </span>
+            </td>
+            <td>@if (f.status === 'ACTIVE') { <span class="chip ok">Active</span> } @else { <span class="chip">Inactive</span> }</td>
+            @if (canManage) {
+              <td class="fl-actions">
+                <a class="btn ghost" [routerLink]="editLink(f)">Edit</a>
+                @if (f.status === 'ACTIVE') {
+                  <button class="btn ghost" type="button" [disabled]="busy()" (click)="askDeactivate(f)">Deactivate</button>
+                } @else {
+                  <button class="btn ghost" type="button" [disabled]="busy()" (click)="activate(f)">Activate</button>
+                }
+                <button class="btn ghost danger" type="button" [disabled]="busy()" (click)="askDelete(f)">Delete</button>
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="canManage ? 6 : 4" class="empty">
+              @if (!items()) { Loading fields… } @else if (canManage) { No custom fields yet. Add the first one. } @else { No custom fields yet. }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="fl-note">Fields are shown on the project form in this order. A deactivated field is hidden but keeps its answers, and can be activated again. Deleting removes the answers for good.</p>
+
+<py-dialog [open]="!!confirm()" [label]="confirm()?.kind === 'delete' ? 'Delete field' : 'Deactivate field'" (closed)="cancel()">
+  @if (confirm(); as c) {
+    <div class="fl-dlg">
+      <h2>{{ c.kind === 'delete' ? 'Delete ' : 'Deactivate ' }}{{ c.field.label }}?</h2>
+      @if (c.kind === 'delete') {
+        <p>
+          @if (c.count === null) { We couldn't check how many projects have an answer. }
+          @else if (c.count === 0) { No project has an answer. }
+          @else { {{ c.count }} project{{ c.count === 1 ? ' has' : 's have' }} an answer, and {{ c.count === 1 ? 'it' : 'they' }} will be removed. }
+          This can't be undone. The key <span class="mono">{{ c.field.apiName }}</span> is retired, so a new field with the same name gets a new key. To keep the answers, deactivate it instead.
+        </p>
+      } @else {
+        <p>It disappears from project forms and overviews. Its answers are kept and come back if you activate it again.</p>
+      }
+      @if (c.error) { <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ c.error }}</span></div> }
+      <div class="fl-dlg-actions">
+        <button class="btn" type="button" data-close (click)="cancel()">Cancel</button>
+        <button class="btn" [class.primary]="c.kind === 'deactivate'" [class.danger-solid]="c.kind === 'delete'" type="button" [disabled]="c.busy" (click)="confirmed()">
+          {{ c.busy ? 'Working…' : c.kind === 'delete' ? 'Delete field' : 'Deactivate' }}
+        </button>
+      </div>
+    </div>
+  }
+</py-dialog>

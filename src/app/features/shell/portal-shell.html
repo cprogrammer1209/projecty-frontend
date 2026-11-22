@@ -83,7 +83,7 @@
       </button>
       <span class="py-avatar py-avatar--sm" [title]="auth.me()?.email ?? ''">{{ initials(auth.me()?.fullName ?? '') }}</span>
     </header>
-    <div class="content">
+    <div class="content" [class.content--fluid]="fluid()">
       @if (active.portal()) {
         <router-outlet />
       }

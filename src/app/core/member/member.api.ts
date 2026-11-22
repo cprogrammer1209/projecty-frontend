@@ -14,7 +14,9 @@ export type Permission =
   | 'PROJECTS_VIEW'
   | 'PROJECTS_CREATE'
   | 'PROJECTS_EDIT'
-  | 'PROJECTS_DELETE';
+  | 'PROJECTS_DELETE'
+  | 'CUSTOM_FIELDS_VIEW'
+  | 'CUSTOM_FIELDS_MANAGE';
 
 export interface MyMembership {
   profileId: string;

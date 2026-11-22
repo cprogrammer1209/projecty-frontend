@@ -32,6 +32,8 @@
 .icon-btn:hover:not(:disabled) { background: var(--py-surface-2); color: var(--py-ink); }
 .icon-btn:disabled { opacity: .5; cursor: default; }
 .content { max-width: 1440px; margin: 0 auto; padding: 30px 32px 48px; }
+/* Pages that want the whole width (tables and dashboards): no centred column. */
+.content--fluid { max-width: none; margin: 0; }
 .mobile-menu { display: none; }
 @media (max-width: 800px) {
   .app { grid-template-columns: minmax(0, 1fr); }

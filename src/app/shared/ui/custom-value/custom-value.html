@@ -1,0 +1,50 @@
+<py-field [label]="field().label" [for]="id()" [error]="error()" [hint]="hint()">
+  @if (field().mandatory && !field().readOnly) {
+    <span fieldAction class="cf-req">Required</span>
+  }
+  @switch (field().fieldType) {
+    @case ('LONG_TEXT') {
+      <textarea class="py-textarea" rows="4" [id]="id()" [value]="text()" [disabled]="disabled() || !!field().readOnly" [attr.aria-invalid]="error() ? 'true' : null" (input)="setText($any($event.target).value)"></textarea>
+    }
+    @case ('NUMBER') {
+      <div class="py-input-wrap"><input [id]="id()" type="number" step="1" inputmode="numeric" [value]="text()" [disabled]="disabled() || !!field().readOnly" [attr.aria-invalid]="error() ? 'true' : null" (input)="setNumber($any($event.target).value)" /></div>
+    }
+    @case ('DECIMAL') {
+      <div class="py-input-wrap"><input [id]="id()" type="number" step="any" inputmode="decimal" [value]="text()" [disabled]="disabled() || !!field().readOnly" [attr.aria-invalid]="error() ? 'true' : null" (input)="setNumber($any($event.target).value)" /></div>
+    }
+    @case ('DATE') {
+      <div class="py-input-wrap"><input [id]="id()" type="date" [value]="text()" [disabled]="disabled() || !!field().readOnly" [attr.aria-invalid]="error() ? 'true' : null" (input)="setText($any($event.target).value)" /></div>
+    }
+    @case ('CHECKBOX') {
+      <label class="cf-check"><input [id]="id()" type="checkbox" [checked]="value() === true" [disabled]="disabled() || !!field().readOnly" (change)="value.set($any($event.target).checked)" /><span>Yes</span></label>
+    }
+    @case ('PICKLIST') {
+      <select class="py-select" [id]="id()" [disabled]="disabled() || !!field().readOnly" [attr.aria-invalid]="error() ? 'true' : null" (change)="setPick($any($event.target).value)">
+        <option value="" [selected]="text() === ''">None</option>
+        @for (o of activeOptions(); track o.id) {
+          <option [value]="o.id" [selected]="o.id === value()">{{ o.label }}{{ o.active ? '' : ' (inactive)' }}</option>
+        }
+      </select>
+    }
+    @case ('MULTI_PICKLIST') {
+      <div class="cf-multi" [id]="id()" role="group" [attr.aria-label]="field().label">
+        @for (o of activeOptions(); track o.id) {
+          <label class="cf-check"><input type="checkbox" [checked]="chosen().includes(o.id)" [disabled]="disabled() || !!field().readOnly" (change)="toggle(o.id, $any($event.target).checked)" /><span>{{ o.label }}{{ o.active ? '' : ' (inactive)' }}</span></label>
+        } @empty {
+          <span class="muted">No choices yet.</span>
+        }
+      </div>
+    }
+    @case ('USER') {
+      <select class="py-select" [id]="id()" [disabled]="disabled() || !!field().readOnly" [attr.aria-invalid]="error() ? 'true' : null" (change)="setPick($any($event.target).value)">
+        <option value="" [selected]="text() === ''">None</option>
+        @for (p of people(); track p.userId) {
+          <option [value]="p.userId" [selected]="p.userId === value()">{{ p.fullName }}</option>
+        }
+      </select>
+    }
+    @default {
+      <div class="py-input-wrap"><input [id]="id()" type="text" [value]="text()" [attr.maxlength]="field().config['maxLength'] ?? null" [disabled]="disabled() || !!field().readOnly" [attr.aria-invalid]="error() ? 'true' : null" (input)="setText($any($event.target).value)" /></div>
+    }
+  }
+</py-field>

@@ -1,0 +1,145 @@
+<div class="lset" [class.drawer]="drawer()">
+  <div class="app">
+    <aside class="side" id="side" aria-label="Settings navigation">
+      <a class="back" [routerLink]="['/p', slug()]"
+        ><py-icon name="back" /><span>Back to app</span></a
+      >
+      <button class="sbtn" type="button" aria-label="Search settings" (click)="openPalette()">
+        <py-icon name="search" /><span>Search settings</span><kbd>{{ mod }}K</kbd>
+      </button>
+      <nav aria-label="Settings">
+        <div class="gl">Portal</div>
+        @for (p of portalPages(); track p.id) {
+          <a class="ni" [routerLink]="link(p.id)" routerLinkActive ariaCurrentWhenActive="page">
+            <py-icon [name]="p.icon" /><span>{{ p.label }}</span>
+          </a>
+        }
+        <div class="gl">Modules</div>
+        <div class="ni" style="color: var(--tx); font-weight: 500; cursor: default">
+          <py-icon name="projects" /><span>Projects</span>
+        </div>
+        <div class="sub">
+          @for (p of projectPages(); track p.id) {
+            <a
+              class="ni"
+              [routerLink]="link('projects/' + p.id)"
+              routerLinkActive
+              ariaCurrentWhenActive="page"
+            >
+              <py-icon [name]="p.icon" /><span>{{ p.label }}</span>
+            </a>
+          }
+        </div>
+        @for (m of soon; track m.id) {
+          <a class="ni dim" [routerLink]="link(m.id)" routerLinkActive ariaCurrentWhenActive="page">
+            <py-icon [name]="m.id" /><span>{{ m.name }}</span
+            ><span class="soon">Soon</span>
+          </a>
+        }
+      </nav>
+      <div class="lfoot">
+        <span class="who">{{ userName() }}</span>
+        <button
+          class="ibtn"
+          type="button"
+          [attr.aria-label]="
+            theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+          "
+          (click)="theme.toggle()"
+        >
+          <py-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" />
+        </button>
+      </div>
+    </aside>
+    <div class="scrim" aria-hidden="true" (click)="drawer.set(false)"></div>
+    <div>
+      <div class="topbar">
+        <button
+          class="ibtn"
+          type="button"
+          aria-label="Open settings menu"
+          (click)="drawer.set(!drawer())"
+        >
+          <py-icon name="menu" />
+        </button>
+        <b>{{ page().topTitle }}</b>
+      </div>
+      <main id="main" tabindex="-1">
+        <div
+          class="col"
+          [class.wide]="page().width === 'wide'"
+          [class.full]="page().width === 'full'"
+        >
+          @if (page().heading; as h) {
+            <header class="ph">
+              <div>
+                <h1>{{ h[0] }}</h1>
+                @if (h[1]) {
+                  <p>{{ h[1] }}</p>
+                }
+              </div>
+            </header>
+          }
+          <router-outlet />
+        </div>
+      </main>
+    </div>
+  </div>
+
+  @if (saveBar.visible()) {
+    <div id="bar" role="region" aria-label="Unsaved changes">
+      <span class="tx">Unsaved changes</span>
+      <button class="btn ghost" type="button" (click)="saveBar.discard()">Discard</button>
+      <button
+        class="btn primary"
+        type="button"
+        [disabled]="saveBar.saveDisabled() || saveBar.saving()"
+        (click)="saveBar.save()"
+      >
+        Save changes
+      </button>
+    </div>
+  }
+  <div id="toasts" role="status" aria-live="polite">
+    @for (t of toasts.toasts(); track t.id) {
+      <div class="toast" [class.err]="t.kind === 'err'">{{ t.text }}</div>
+    }
+  </div>
+
+  <dialog
+    #pal
+    class="pal"
+    aria-label="Jump to a settings page"
+    (mousedown)="onPaletteBackdrop($event)"
+  >
+    <input
+      #palInput
+      type="text"
+      placeholder="Jump to a settings page…"
+      autocomplete="off"
+      aria-label="Search settings pages"
+      [value]="query()"
+      (input)="onQuery($any($event.target).value)"
+      (keydown)="onPaletteKey($event)"
+    />
+    <ul role="listbox">
+      @for (e of entries(); track e.url; let i = $index) {
+        <li
+          role="option"
+          [class.act]="i === active()"
+          [attr.aria-selected]="i === active()"
+          (click)="go(e)"
+        >
+          <py-icon [name]="e.icon" /><span>{{ e.label }}</span
+          ><small>{{ e.hint }}</small>
+        </li>
+      } @empty {
+        <li class="none" style="cursor: default">No matching page</li>
+      }
+    </ul>
+    <div class="ph2">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span
+      ><span><kbd>Esc</kbd> close</span>
+    </div>
+  </dialog>
+</div>

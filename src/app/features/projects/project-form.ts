@@ -8,7 +8,10 @@ import { ApiError } from '../../core/api/api.types';
 import { AuthService } from '../../core/auth/auth.service';
 import { PortalPeople } from '../../core/member/portal-people.service';
 import { ActivePortalService } from '../../core/portal/active-portal.service';
-import { Project, ProjectApi, ProjectVisibility } from '../../core/project/project.api';
+import { Layout, LayoutApi, LayoutField } from '../../core/customfield/layout.api';
+import { Project, ProjectApi, ProjectDetail, ProjectVisibility } from '../../core/project/project.api';
+import { CustomValue } from '../../shared/ui/custom-value/custom-value';
+import { isEmptyValue, isWideField } from '../../shared/ui/custom-value/custom-value.util';
 import { PyDayPipe } from '../../shared/pipes/py-day.pipe';
 import { Field } from '../../shared/ui/field/field';
 import { applyServerErrors, controlError, focusFirstInvalid, setServerError } from '../../shared/ui/form-errors';
@@ -33,9 +36,10 @@ function datesInOrder(group: AbstractControl): ValidationErrors | null {
  */
 @Component({
   selector: 'py-project-form',
-  imports: [ReactiveFormsModule, RouterLink, Field, Icon, PyDayPipe],
+  imports: [ReactiveFormsModule, RouterLink, Field, Icon, PyDayPipe, CustomValue],
   templateUrl: './project-form.html',
   styleUrl: './projects.scss',
+  host: { class: 'form-page' },
 })
 export class ProjectForm implements OnInit {
   /** The project id from the route; absent when creating. */
@@ -43,6 +47,7 @@ export class ProjectForm implements OnInit {
 
   protected readonly auth = inject(AuthService);
   private readonly projectApi = inject(ProjectApi);
+  private readonly layoutApi = inject(LayoutApi);
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly active = inject(ActivePortalService);
@@ -70,6 +75,25 @@ export class ProjectForm implements OnInit {
   protected readonly missing = signal(false);
   protected readonly forbidden = signal(false);
   private keyEdited = false;
+  /** Answers the person typed or picked: a layout change doesn't overwrite them with defaults. */
+  private readonly touched = new Set<string>();
+
+  /** Active layouts offered when creating; empty when editing (the project keeps its own layout). */
+  protected readonly layouts = signal<Layout[]>([]);
+  protected readonly layoutId = signal<string | null>(null);
+  private readonly detail = signal<ProjectDetail | null>(null);
+  /** Answers by field apiName. Keys of fields the chosen layout doesn't show are kept but not sent. */
+  protected readonly customValues = signal<Record<string, unknown>>({});
+  protected readonly customErrors = signal<Record<string, string>>({});
+  protected readonly isWide = isWideField;
+
+  /** The layout drawing the custom sections: the picked one when creating, the project's own when editing. */
+  protected readonly layout = computed<Layout | null>(
+    () => this.detail()?.layout ?? this.layouts().find((l) => l.id === this.layoutId()) ?? null,
+  );
+  /** Only sections that have a visible field. */
+  protected readonly sections = computed(() => (this.layout()?.sections ?? []).filter((s) => s.fields.length));
+  private readonly layoutFields = computed<LayoutField[]>(() => this.sections().flatMap((s) => s.fields));
 
   private readonly value = toSignal(
     this.form.valueChanges.pipe(
@@ -123,7 +147,46 @@ export class ProjectForm implements OnInit {
     const id = this.id();
     if (id) {
       this.loadProject(id);
+    } else {
+      this.loadLayouts();
     }
+  }
+
+  protected setLayout(id: string): void {
+    this.layoutId.set(id);
+    this.applyDefaults();
+  }
+
+  protected setValue(apiName: string, value: unknown): void {
+    this.touched.add(apiName);
+    this.customValues.update((cur) => ({ ...cur, [apiName]: value }));
+    if (this.customErrors()[apiName]) {
+      this.customErrors.update(({ [apiName]: _gone, ...rest }) => rest);
+    }
+  }
+
+  /** A new project starts with the layout's defaults (a layout can override the field's own default); typed answers stay. */
+  private applyDefaults(): void {
+    const missing = this.layoutFields().filter((f) => !this.touched.has(f.apiName));
+    if (missing.length) {
+      this.customValues.update((cur) => ({ ...cur, ...Object.fromEntries(missing.map((f) => [f.apiName, f.defaultValue ?? null])) }));
+    }
+  }
+
+  private loadLayouts(): void {
+    this.loading.set(true);
+    this.layoutApi.active().subscribe({
+      next: (layouts) => {
+        this.loading.set(false);
+        this.layouts.set(layouts);
+        this.layoutId.set((layouts.find((l) => l.defaultLayout) ?? layouts[0])?.id ?? null);
+        this.applyDefaults();
+      },
+      error: (err: ApiError) => {
+        this.loading.set(false);
+        this.alert.set(err.message);
+      },
+    });
   }
 
   protected backLink(): string[] {
@@ -160,6 +223,7 @@ export class ProjectForm implements OnInit {
   protected submit(): void {
     this.submitted.set(true);
     this.alert.set(null);
+    this.customErrors.set({});
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       focusFirstInvalid(this.host.nativeElement);
@@ -173,12 +237,18 @@ export class ProjectForm implements OnInit {
       endDate: v.endDate || null,
       visibility: v.visibility,
       description: v.description,
+      customValues: Object.fromEntries(
+        this.layoutFields().map((f) => {
+          const answer = this.customValues()[f.apiName];
+          return [f.apiName, isEmptyValue(answer) ? null : answer];
+        }),
+      ),
     };
     const id = this.id();
     this.busy.set(true);
     const saved = id
       ? this.projectApi.update(id, input).pipe(map(() => id))
-      : this.projectApi.create({ ...input, key: v.key }).pipe(map((created) => created.id));
+      : this.projectApi.create({ ...input, key: v.key, layoutId: this.layoutId() }).pipe(map((created) => created.id));
     saved.subscribe({
       next: (projectId) =>
         this.router.navigate(['/p', this.active.portal()?.slug, 'projects', projectId], {
@@ -195,13 +265,16 @@ export class ProjectForm implements OnInit {
   private loadProject(id: string): void {
     this.loading.set(true);
     this.projectApi.get(id).subscribe({
-      next: ({ project }) => {
+      next: (detail) => {
+        const { project } = detail;
         this.loading.set(false);
         if (!project.canEdit) {
           this.forbidden.set(true);
           return;
         }
         this.project.set(project);
+        this.detail.set(detail);
+        this.customValues.set({ ...detail.hiddenValues, ...project.customValues });
         this.keyEdited = true;
         this.form.patchValue({
           name: project.name,
@@ -256,11 +329,21 @@ export class ProjectForm implements OnInit {
       case 'PROJECT_PERSON_INVALID':
         setServerError(this.form.controls.ownerUserId, err.message);
         return;
-      case 'VALIDATION_FAILED':
-        if (applyServerErrors(this.form, err.details)) {
+      case 'VALIDATION_FAILED': {
+        const names = new Set(this.layoutFields().map((f) => f.apiName));
+        const custom = Object.entries(err.details).filter(([k, m]) => names.has(k) && typeof m === 'string') as [string, string][];
+        const rest = Object.fromEntries(Object.entries(err.details).filter(([k]) => !names.has(k)));
+        const onForm = applyServerErrors(this.form, rest);
+        if (custom.length) {
+          this.customErrors.set(Object.fromEntries(custom));
+          this.alert.set('Some custom fields need attention.');
+          return;
+        }
+        if (onForm) {
           return;
         }
         break;
+      }
     }
     this.alert.set(err.message);
   }

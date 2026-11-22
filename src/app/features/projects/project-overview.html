@@ -22,6 +22,11 @@
         <span class="chip-vis" [title]="d.project.visibility === 'PUBLIC' ? 'Visible to every employee in the portal, read-only' : 'Only members and Admins can see it'">
           <py-icon [name]="d.project.visibility === 'PUBLIC' ? 'globe' : 'user'" />{{ d.project.visibility === 'PUBLIC' ? 'Public' : 'Private' }}
         </span>
+        @if (d.project.canEdit) {
+          <a class="chip-vis layout-link" title="Change the layout in project settings" [routerLink]="['/p', active.portal()?.slug, 'projects', d.project.id, 'settings']"><py-icon name="layers" />{{ d.layout.name }}</a>
+        } @else {
+          <span class="chip-vis" title="The layout decides which extra fields this project has"><py-icon name="layers" />{{ d.layout.name }}</span>
+        }
       </div>
       <h1>{{ d.project.name }}</h1>
       <p>
@@ -35,6 +40,7 @@
           @for (s of statuses(); track s.name) { <option [value]="s.name" [selected]="s.name === d.project.status">{{ s.name }}</option> }
         </select>
         <a class="py-btn py-btn--secondary" [routerLink]="['/p', active.portal()?.slug, 'projects', d.project.id, 'edit']">Edit</a>
+        <a class="py-btn py-btn--secondary" id="proj-settings" [routerLink]="['/p', active.portal()?.slug, 'projects', d.project.id, 'settings']">Settings</a>
       } @else {
         <py-project-status [status]="d.project.status" />
       }
@@ -64,6 +70,31 @@
         <div class="panel-head"><div><h2>About</h2></div></div>
         <div class="about">@if (d.project.description) { {{ d.project.description }} } @else { <span class="muted">No description yet.</span> }</div>
       </section>
+      @if (sections().length) {
+        <div class="cf-sections">
+          <p class="hint cf-top">
+            @if (d.project.canEdit) { Click a value to change it. Changes save as you go. } @else { Read-only for you: only Admins, the owner and project Managers can change these. }
+          </p>
+          @for (sec of sections(); track sec.id) {
+            <section class="panel cf-card">
+              <div class="panel-head">
+                <div>
+                  <h2>
+                    @if (sec.collapsible) {
+                      <button class="sec-toggle" type="button" [attr.aria-expanded]="!isCollapsed(sec)" (click)="toggleSection(sec)"><span aria-hidden="true">{{ isCollapsed(sec) ? '▸' : '▾' }}</span> {{ sec.name }}</button>
+                    } @else { {{ sec.name }} }
+                  </h2>
+                </div>
+              </div>
+              @if (!isCollapsed(sec)) {
+                <div class="cf-props">
+                  <py-property-list [fields]="sec.fields" [values]="d.project.customValues" [people]="people.activeMembers()" [canEdit]="d.project.canEdit" [save]="saveValue" />
+                </div>
+              }
+            </section>
+          }
+        </div>
+      }
       <section class="panel">
         <div class="panel-head"><div><h2>Upcoming phases</h2><p>Milestones and their dates</p></div></div>
         <div class="empty line">Phases arrive with the next step.</div>

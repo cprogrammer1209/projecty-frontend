@@ -1,11 +1,12 @@
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 
 import { ApiError } from '../../core/api/api.types';
 import { AuthService } from '../../core/auth/auth.service';
 import { PortalPeople } from '../../core/member/portal-people.service';
 import { ActivePortalService } from '../../core/portal/active-portal.service';
+import { LayoutSection } from '../../core/customfield/layout.api';
 import {
   ProjectApi,
   ProjectDetail,
@@ -19,6 +20,7 @@ import { initials } from '../auth/text';
 import { takeNavigationNotice } from './navigation-notice';
 import { ACTIVITY_LABELS } from './project-labels';
 import { ProjectStatus } from './project-status';
+import { PropertyList, SaveValue } from './property-list';
 
 /**
  * A project's overview (PRJ-US-04, 05, 06, 07): status, members, recent activity, delete. Progress and task counts
@@ -26,7 +28,7 @@ import { ProjectStatus } from './project-status';
  */
 @Component({
   selector: 'py-project-overview',
-  imports: [RouterLink, PyDatePipe, PyDayPipe, Icon, ProjectStatus],
+  imports: [RouterLink, PyDatePipe, PyDayPipe, Icon, ProjectStatus, PropertyList],
   templateUrl: './project-overview.html',
   styleUrl: './projects.scss',
 })
@@ -57,6 +59,82 @@ export class ProjectOverview implements OnInit {
     const inProject = new Set((this.detail()?.members ?? []).map((m) => m.userId));
     return this.people.activeMembers().filter((m) => !inProject.has(m.userId));
   });
+
+  /** Collapsed sections, remembered per person in this browser: { "<layoutId>:<sectionId>": true }. */
+  private readonly collapsedKey = 'py-cf-collapsed';
+  private readonly collapsedMap = signal<Record<string, boolean>>(this.readCollapsed());
+
+  /** Only the sections of the project's layout that have a visible field. */
+  protected readonly sections = computed(() => (this.detail()?.layout.sections ?? []).filter((s) => s.fields.length));
+  
+  /** Saves one custom answer: the other project values go along unchanged, and keys not sent stay as they are. */
+  protected readonly saveValue: SaveValue = async (apiName, value, optimistic) => {
+    const d = this.detail();
+    if (!d) return;
+    const p = d.project;
+    const previous = p.customValues[apiName];
+    if (optimistic) this.applyValue(apiName, value);
+    try {
+      const saved = await firstValueFrom(
+        this.projectApi.update(this.id(), {
+          name: p.name,
+          description: p.description,
+          ownerUserId: p.ownerUserId,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          visibility: p.visibility,
+          customValues: { [apiName]: value },
+        }),
+      );
+      this.applyValue(apiName, saved.customValues?.[apiName] ?? value);
+    } catch (err) {
+      if (optimistic) this.applyValue(apiName, previous);
+      const e = err as ApiError;
+      const detail = e.details?.[apiName];
+      throw new Error(typeof detail === 'string' ? detail : e.message);
+    }
+    this.projectApi.get(this.id()).subscribe({
+      next: (fresh) => this.detail.update((cur) => (cur ? { ...cur, activity: fresh.activity } : cur)),
+      error: () => {},
+    });
+  };
+
+  protected isCollapsed(section: LayoutSection): boolean {
+    const d = this.detail();
+    return !!d && section.collapsible && !!this.collapsedMap()[`${d.layout.id}:${section.id}`];
+  }
+
+  protected toggleSection(section: LayoutSection): void {
+    const d = this.detail();
+    if (!d) return;
+    const key = `${d.layout.id}:${section.id}`;
+    const next = { ...this.collapsedMap(), [key]: !this.collapsedMap()[key] };
+    this.collapsedMap.set(next);
+    try {
+      localStorage.setItem(this.collapsedKey, JSON.stringify(next));
+    } catch {
+      /* not remembered */
+    }
+  }
+
+  private readCollapsed(): Record<string, boolean> {
+    try {
+      const raw = JSON.parse(localStorage.getItem(this.collapsedKey) ?? 'null') as Record<string, boolean> | null;
+      return raw && typeof raw === 'object' ? raw : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private applyValue(apiName: string, value: unknown): void {
+    this.detail.update((cur) => {
+      if (!cur) return cur;
+      const next = { ...cur.project.customValues };
+      if (value === null || value === undefined || value === '' || (Array.isArray(value) && !value.length)) delete next[apiName];
+      else next[apiName] = value;
+      return { ...cur, project: { ...cur.project, customValues: next } };
+    });
+  }
 
   ngOnInit(): void {
     this.people.load();

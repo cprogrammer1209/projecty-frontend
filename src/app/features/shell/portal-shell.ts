@@ -1,6 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ActivatedRouteSnapshot, Data, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map, tap } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
@@ -40,14 +40,18 @@ export class PortalShell {
   protected readonly userMenuOpen = signal(false);
   protected readonly sidebarOpen = signal(false);
 
-  protected readonly crumb = toSignal(
+  /** The deepest active route's data: its breadcrumb and whether the page wants the full width. */
+  private readonly routeData = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
       tap(() => this.sidebarOpen.set(false)),
-      map(() => crumbOf(this.router.routerState.snapshot.root)),
+      map(() => leafDataOf(this.router.routerState.snapshot.root)),
     ),
-    { initialValue: crumbOf(this.router.routerState.snapshot.root) },
+    { initialValue: leafDataOf(this.router.routerState.snapshot.root) },
   );
+  protected readonly crumb = computed(() => (this.routeData()['crumb'] as string | undefined) ?? '');
+  /** Routes with `data: { fluid: true }` (tables and dashboards) skip the centred, width-limited column. */
+  protected readonly fluid = computed(() => !!this.routeData()['fluid']);
 
   protected toggleSwitcher(event: Event): void {
     event.stopPropagation();
@@ -76,10 +80,10 @@ export class PortalShell {
   }
 }
 
-function crumbOf(route: ActivatedRouteSnapshot): string {
+function leafDataOf(route: ActivatedRouteSnapshot): Data {
   let current = route;
   while (current.firstChild) {
     current = current.firstChild;
   }
-  return (current.data['crumb'] as string | undefined) ?? '';
+  return current.data;
 }

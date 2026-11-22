@@ -1,0 +1,16 @@
+.lset .lay-dlg { width: auto; }
+.lset .lay-dlg form { padding: 0; }
+.lset .lay-dlg h2 { margin-bottom: 4px; }
+.lset .lay-dlg textarea.in { height: auto; padding: 6px 8px; resize: vertical; }
+.lset .mv { min-width: 240px; }
+.lset .mv .in { width: 100%; margin: 2px 0 4px; }
+.lset .mv ul { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow: auto; }
+.lset .mv li { display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 0 8px; border-radius: 5px; cursor: pointer; color: var(--tx2); }
+.lset .mv li:hover, .lset .mv li.act { background: var(--sel); color: var(--tx); }
+.lset .mv li .cur { margin-left: auto; font-size: 11px; color: var(--mut2); }
+.lset .ins-note { font-size: 12px; margin: 0 0 4px; }
+.lset .ro-row { justify-content: space-between; color: var(--tx2); }
+.lset .rm-btn { margin-top: 6px; }
+.lset .new-btn { margin-top: 10px; }
+.lset .pal-h { margin-bottom: 8px; }
+.lset .cv-sec-h .ibtn:disabled { opacity: 0.3; cursor: default; }

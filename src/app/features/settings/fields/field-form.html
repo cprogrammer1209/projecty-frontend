@@ -1,0 +1,168 @@
+@if (loading()) {
+  <p class="muted">Loading…</p>
+} @else if (missing()) {
+  <section class="group">
+    <div class="ff-missing">
+      <b>Field not found</b>
+      <span>It doesn't exist or was deleted.</span>
+      <a class="btn" [routerLink]="backLink()">Back to fields</a>
+    </div>
+  </section>
+} @else {
+  <a class="back" [routerLink]="backLink()"><py-icon name="back" />Fields</a>
+  <div class="ff-title">
+    <h1>{{ field() ? 'Edit ' + field()!.label : 'New custom field' }}</h1>
+    <p>
+      @if (field()) { The type, the key and "unique" are fixed after creation, because answers already stored depend on them. }
+      @else { Pick what kind of answer it holds. The type can't be changed later. }
+    </p>
+  </div>
+
+  @if (alert(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="ff-grid">
+      <div class="ff-main">
+        <section class="group ff-card">
+          <h2>Basics</h2>
+          <py-field label="Field name" for="cf-label" [error]="labelError()">
+            <div class="py-input-wrap">
+              <input id="cf-label" type="text" formControlName="label" placeholder="Customer tier" autocomplete="off" [attr.maxlength]="maxLabel * 2"
+                     [attr.aria-invalid]="labelError() ? 'true' : null" [attr.aria-describedby]="labelError() ? 'cf-label-error' : 'cf-key'" />
+            </div>
+          </py-field>
+          <p id="cf-key" class="ff-key">
+            Key <span class="mono">{{ field() ? field()!.apiName : keyHint() }}</span>
+            @if (!field()) { (made from the name; if it is taken a number is added) }
+          </p>
+          <py-field label="Type" for="cf-type" [error]="serverErrors().type ?? null" [hint]="field() ? 'Can\'t be changed after creation.' : null">
+            <select id="cf-type" class="py-select" formControlName="fieldType" (change)="onTypeChange()" [attr.aria-invalid]="serverErrors().type ? 'true' : null">
+              @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+            </select>
+          </py-field>
+          <py-field label="Description" for="cf-desc" [error]="serverErrors().description ?? null" hint="Optional. Shown under the field on the project form.">
+            <textarea id="cf-desc" class="py-textarea" rows="2" formControlName="description" [attr.aria-invalid]="serverErrors().description ? 'true' : null"></textarea>
+          </py-field>
+        </section>
+
+        @if (isPick()) {
+          <section class="group ff-card" aria-labelledby="ff-choices">
+            <h2 id="ff-choices">Choices</h2>
+            <p class="ff-sub">
+              Projects already using a choice keep it after you deactivate it. Choices are never deleted.
+              {{ type() === 'PICKLIST' ? 'Mark one choice as the default.' : 'Mark any number of choices as defaults.' }}
+            </p>
+            @if (optionsError(); as message) {
+              <p class="py-field__error" id="cf-opts-error"><py-icon name="alert" />{{ message }}</p>
+            }
+            <ul class="ff-opts" [attr.aria-invalid]="optionsError() ? 'true' : null" tabindex="-1">
+              @for (o of options(); track o.key; let i = $index) {
+                <li class="ff-opt" [class.off]="!o.active">
+                  <input type="text" [attr.data-choice]="o.key" [value]="o.label" [attr.placeholder]="'Choice ' + (i + 1)" [attr.aria-label]="'Choice ' + (i + 1)"
+                         [attr.maxlength]="maxChoice" [attr.aria-invalid]="optionsError() && !o.label.trim() && o.active ? 'true' : null"
+                         (input)="setLabel(o, $any($event.target).value)" />
+                  <label class="ff-def" [title]="type() === 'PICKLIST' ? 'The choice picked for a new project' : 'Picked for a new project'">
+                    <input type="checkbox" [checked]="o.defaultOption" [disabled]="!o.active" (change)="toggleDefault(o, $any($event.target).checked)" />
+                    <span>Default</span>
+                  </label>
+                  <button class="icon-x" type="button" aria-label="Move up" [disabled]="!canMove(i, -1)" (click)="move(i, -1)"><py-icon name="up" /></button>
+                  <button class="icon-x" type="button" aria-label="Move down" [disabled]="!canMove(i, 1)" (click)="move(i, 1)"><py-icon name="down" /></button>
+                  @if (o.id) {
+                    <button class="btn ghost" type="button" (click)="toggleActive(o)">{{ o.active ? 'Deactivate' : 'Activate' }}</button>
+                  } @else {
+                    <button class="icon-x" type="button" aria-label="Remove choice" (click)="removeChoice(o)"><py-icon name="x" /></button>
+                  }
+                </li>
+              }
+            </ul>
+            <div><button class="btn" type="button" (click)="addChoice()"><py-icon name="plus" />Add a choice</button></div>
+          </section>
+        }
+
+        <section class="group ff-card">
+          <h2>Rules</h2>
+          <label class="cf-rule">
+            <input type="checkbox" formControlName="mandatory" />
+            <span><strong>Required</strong><small>A project can't be saved without an answer.</small></span>
+          </label>
+          <label class="cf-rule" [class.off]="!!field() || !canUnique()">
+            <input type="checkbox" formControlName="unique" (change)="onUniqueChange()" [attr.aria-invalid]="serverErrors().unique ? 'true' : null" [attr.aria-disabled]="!canUnique()" [attr.disabled]="!canUnique() ? '' : null" />
+            <span>
+              <strong>Unique</strong>
+              <small>
+                @if (!canUnique()) { Only text, number, decimal and date fields can be unique. }
+                @else if (field()) { Fixed after creation. }
+                @else { No two projects can have the same answer. }
+              </small>
+            </span>
+          </label>
+          @if (serverErrors().unique; as message) { <p class="py-field__error"><py-icon name="alert" />{{ message }}</p> }
+          <label class="cf-rule">
+            <input type="checkbox" formControlName="sensitive" />
+            <span><strong>Sensitive</strong><small>Marks the field for field-level access control (arrives later).</small></span>
+          </label>
+
+          @if (type() === 'TEXT' || type() === 'LONG_TEXT') {
+            <py-field label="Longest answer (characters)" for="cf-maxlength" [hint]="'Up to ' + (type() === 'TEXT' ? 255 : 5000) + '. Leave empty for the maximum.'">
+              <div class="py-input-wrap"><input id="cf-maxlength" type="number" formControlName="maxLength" [attr.aria-invalid]="serverErrors().config ? 'true' : null" /></div>
+            </py-field>
+          }
+          @if (type() === 'TEXT') {
+            <py-field label="Pattern (optional)" for="cf-regex" hint="A regular expression the answer must match, for example ^[A-Z]{3}-\d+$.">
+              <div class="py-input-wrap"><input id="cf-regex" type="text" formControlName="regex" autocomplete="off" spellcheck="false" [attr.aria-invalid]="serverErrors().config ? 'true' : null" /></div>
+            </py-field>
+          }
+          @if (isNumeric()) {
+            <div class="ff-row">
+              <py-field label="Smallest value" for="cf-min"><div class="py-input-wrap"><input id="cf-min" type="number" formControlName="min" [attr.aria-invalid]="serverErrors().config ? 'true' : null" /></div></py-field>
+              <py-field label="Largest value" for="cf-max"><div class="py-input-wrap"><input id="cf-max" type="number" formControlName="max" [attr.aria-invalid]="serverErrors().config ? 'true' : null" /></div></py-field>
+            </div>
+          }
+          @if (type() === 'DECIMAL') {
+            <py-field label="Decimal places" for="cf-decimals" hint="From 0 to 6. Default 2.">
+              <div class="py-input-wrap"><input id="cf-decimals" type="number" formControlName="decimals" [attr.aria-invalid]="serverErrors().config ? 'true' : null" /></div>
+            </py-field>
+          }
+          @if (type() === 'MULTI_PICKLIST') {
+            <py-field label="Pick at most" for="cf-maxsel" hint="Leave empty for no limit.">
+              <div class="py-input-wrap"><input id="cf-maxsel" type="number" formControlName="maxSelections" [attr.aria-invalid]="serverErrors().config ? 'true' : null" /></div>
+            </py-field>
+          }
+          @if (serverErrors().config; as message) { <p class="py-field__error"><py-icon name="alert" />{{ message }}</p> }
+        </section>
+
+        <section class="group ff-card">
+          <h2>Default value</h2>
+          @if (form.controls.unique.value) {
+            <p class="ff-sub">A unique field can't have a default value, because every record would get the same one.</p>
+          } @else if (type() === 'USER') {
+            <p class="ff-sub">No default for a person.</p>
+          } @else if (isPick()) {
+            <p class="ff-sub">Use the Default switch on the choices above.</p>
+          } @else {
+            <py-custom-value [field]="defaultDraft()" [(value)]="defaultValue" [error]="serverErrors().defaultValue ?? null" (valueChange)="clearServer('defaultValue')" />
+          }
+        </section>
+      </div>
+
+      <aside class="ff-side">
+        <section class="group ff-card ff-preview">
+          <h2>On the project form</h2>
+          @if (hasDefaultControl()) {
+            <py-custom-value [field]="draft()" [(value)]="defaultValue" />
+          } @else {
+            <py-custom-value [field]="draft()" [(value)]="previewValue" [people]="people()" />
+          }
+          <p class="ff-sub">{{ field() ? 'Changes show on the project form once saved.' : 'This is how people will fill it in.' }}</p>
+        </section>
+      </aside>
+    </div>
+
+    <div class="ff-bar">
+      <a class="btn" [routerLink]="backLink()">Cancel</a>
+      <button class="btn primary" type="submit" [disabled]="busy()">{{ busy() ? 'Saving' : field() ? 'Save changes' : 'Add field' }}</button>
+    </div>
+  </form>
+}

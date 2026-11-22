@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { authGuard, guestGuard, permissionGuard, portalGuard } from './core/auth/auth.guards';
+import { unsavedChangesGuard } from './core/ui/unsaved-changes.guard';
 import { AuthLayout } from './features/auth/layout/auth-layout';
 
 const TITLE_SUFFIX = ' · ProjectY';
@@ -93,6 +94,99 @@ export const routes: Routes = [
     ],
   },
   {
+    // Settings has its own full-page shell (no app sidebar), so it is a sibling of the portal shell, not a child.
+    path: 'p/:slug/settings',
+    canActivate: [authGuard, portalGuard],
+    loadComponent: () => import('./features/settings/shell/settings-shell').then((m) => m.SettingsShell),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'portal' },
+      {
+        path: 'portal',
+        title: 'Portal profile' + TITLE_SUFFIX,
+        data: { heading: ['Portal profile', 'How your portal looks and behaves for everyone in it.'] },
+        loadComponent: () => import('./features/settings/portal-settings').then((m) => m.PortalSettings),
+      },
+      {
+        path: 'users',
+        title: 'Users & profiles' + TITLE_SUFFIX,
+        data: { heading: ['Users & profiles', 'Who is in the portal, and what each profile may do.'], width: 'wide' },
+        canActivate: [permissionGuard('USERS_VIEW')],
+        loadComponent: () => import('./features/settings/users/users-page').then((m) => m.UsersPage),
+      },
+      {
+        path: 'audit',
+        title: 'Audit log' + TITLE_SUFFIX,
+        data: { heading: ['Audit log', 'Every change to portal settings and people, newest first. Entries cannot be edited or deleted.'], width: 'wide' },
+        canActivate: [permissionGuard('AUDIT_VIEW')],
+        loadComponent: () => import('./features/settings/audit/audit-page').then((m) => m.AuditPage),
+      },
+      {
+        path: 'preferences',
+        title: 'My preferences' + TITLE_SUFFIX,
+        data: { heading: ['My preferences', 'Only for you. Nobody else in the portal sees these.'] },
+        loadComponent: () => import('./features/settings/my-preferences').then((m) => m.MyPreferences),
+      },
+      { path: 'projects', pathMatch: 'full', redirectTo: 'projects/fields' },
+      {
+        path: 'projects/fields',
+        title: 'Fields · Projects' + TITLE_SUFFIX,
+        data: { heading: ['Fields', 'Extra details every project can carry. Layouts decide where they appear.'], width: 'wide' },
+        canActivate: [permissionGuard('CUSTOM_FIELDS_VIEW')],
+        loadComponent: () => import('./features/settings/fields/fields-page').then((m) => m.FieldsPage),
+      },
+      {
+        path: 'projects/fields/new',
+        title: 'New field · Projects' + TITLE_SUFFIX,
+        data: { width: 'wide', topTitle: 'New field' },
+        canActivate: [permissionGuard('CUSTOM_FIELDS_MANAGE')],
+        loadComponent: () => import('./features/settings/fields/field-form').then((m) => m.FieldForm),
+      },
+      {
+        path: 'projects/fields/:id/edit',
+        title: 'Edit field · Projects' + TITLE_SUFFIX,
+        data: { width: 'wide', topTitle: 'Edit field' },
+        canActivate: [permissionGuard('CUSTOM_FIELDS_MANAGE')],
+        loadComponent: () => import('./features/settings/fields/field-form').then((m) => m.FieldForm),
+      },
+      {
+        path: 'projects/layouts',
+        title: 'Layouts · Projects' + TITLE_SUFFIX,
+        data: { topTitle: 'Layouts' },
+        canActivate: [permissionGuard('CUSTOM_FIELDS_VIEW')],
+        loadComponent: () => import('./features/settings/layouts/layouts-page').then((m) => m.LayoutsPage),
+      },
+      {
+        path: 'projects/layouts/:id',
+        title: 'Edit layout · Projects' + TITLE_SUFFIX,
+        data: { width: 'full', topTitle: 'Edit layout' },
+        canActivate: [permissionGuard('CUSTOM_FIELDS_MANAGE')],
+        canDeactivate: [unsavedChangesGuard],
+        loadComponent: () => import('./features/settings/layouts/layout-builder').then((m) => m.LayoutBuilder),
+      },
+      {
+        path: 'projects/statuses',
+        title: 'Statuses · Projects' + TITLE_SUFFIX,
+        data: { heading: ['Statuses', 'The stages a project moves through, grouped by what they mean.'] },
+        canActivate: [permissionGuard('PROJECTS_VIEW')],
+        loadComponent: () => import('./features/settings/shell/settings-statuses').then((m) => m.SettingsStatuses),
+      },
+      {
+        path: 'projects/templates',
+        title: 'Templates · Projects' + TITLE_SUFFIX,
+        data: { heading: ['Templates', 'Starting points for new projects.'] },
+        canActivate: [permissionGuard('PROJECTS_VIEW')],
+        loadComponent: () => import('./features/settings/shell/settings-templates').then((m) => m.SettingsTemplates),
+      },
+      {
+        // Tasks, Issues, Documents and Time tracking: their settings arrive with the modules.
+        path: ':module',
+        title: 'Settings' + TITLE_SUFFIX,
+        data: { heading: 'module' },
+        loadComponent: () => import('./features/settings/shell/settings-soon').then((m) => m.SettingsSoon),
+      },
+    ],
+  },
+  {
     path: 'p/:slug',
     canActivate: [authGuard, portalGuard],
     loadComponent: () => import('./features/shell/portal-shell').then((m) => m.PortalShell),
@@ -106,7 +200,7 @@ export const routes: Routes = [
       {
         path: 'projects',
         title: 'Projects' + TITLE_SUFFIX,
-        data: { crumb: 'Projects' },
+        data: { crumb: 'Projects', fluid: true },
         canActivate: [permissionGuard('PROJECTS_VIEW')],
         loadComponent: () => import('./features/projects/projects-page').then((m) => m.ProjectsPage),
       },
@@ -120,7 +214,7 @@ export const routes: Routes = [
       {
         path: 'projects/trash',
         title: 'Project trash' + TITLE_SUFFIX,
-        data: { crumb: 'Trash' },
+        data: { crumb: 'Trash', fluid: true },
         canActivate: [permissionGuard('PROJECTS_DELETE')],
         loadComponent: () => import('./features/projects/projects-trash').then((m) => m.ProjectsTrash),
       },
@@ -132,42 +226,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/projects/project-form').then((m) => m.ProjectForm),
       },
       {
-        path: 'projects/:id',
-        title: 'Project' + TITLE_SUFFIX,
-        data: { crumb: 'Projects' },
+        path: 'projects/:id/settings',
+        title: 'Project settings' + TITLE_SUFFIX,
+        data: { crumb: 'Project settings' },
         canActivate: [permissionGuard('PROJECTS_VIEW')],
-        loadComponent: () => import('./features/projects/project-overview').then((m) => m.ProjectOverview),
+        loadComponent: () => import('./features/projects/project-settings').then((m) => m.ProjectSettings),
       },
       {
-        path: 'settings',
-        title: 'Settings' + TITLE_SUFFIX,
-        data: { crumb: 'Settings' },
-        loadComponent: () => import('./features/settings/settings-page').then((m) => m.SettingsPage),
-        children: [
-          { path: '', pathMatch: 'full', redirectTo: 'portal' },
-          {
-            path: 'portal',
-            data: { crumb: 'Settings' },
-            loadComponent: () => import('./features/settings/portal-settings').then((m) => m.PortalSettings),
-          },
-          {
-            path: 'users',
-            data: { crumb: 'Users' },
-            canActivate: [permissionGuard('USERS_VIEW')],
-            loadComponent: () => import('./features/settings/users/users-page').then((m) => m.UsersPage),
-          },
-          {
-            path: 'audit',
-            data: { crumb: 'Audit log' },
-            canActivate: [permissionGuard('AUDIT_VIEW')],
-            loadComponent: () => import('./features/settings/audit/audit-page').then((m) => m.AuditPage),
-          },
-          {
-            path: 'preferences',
-            data: { crumb: 'My preferences' },
-            loadComponent: () => import('./features/settings/my-preferences').then((m) => m.MyPreferences),
-          },
-        ],
+        path: 'projects/:id',
+        title: 'Project' + TITLE_SUFFIX,
+        data: { crumb: 'Projects', fluid: true },
+        canActivate: [permissionGuard('PROJECTS_VIEW')],
+        loadComponent: () => import('./features/projects/project-overview').then((m) => m.ProjectOverview),
       },
     ],
   },

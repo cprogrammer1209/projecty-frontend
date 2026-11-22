@@ -1,0 +1,4 @@
+/* The popover floats (fixed) instead of hanging off the cell, so the shared popover styles lose their offsets. */
+.pop.inpop { position: static; min-width: 0; max-width: none; padding: 0; border: 0; box-shadow: none; background: none; }
+.pop.inpop.cal { width: 240px; padding: 2px; }
+.inl-wrap .py-field__error { margin-top: 4px; }

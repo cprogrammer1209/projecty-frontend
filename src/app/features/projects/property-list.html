@@ -1,0 +1,111 @@
+@for (f of fields(); track f.apiName) {
+  @let k = f.apiName;
+  @let v = values()[k];
+  @let blank = isEmpty(v);
+  @let err = error();
+  <div class="prop" [class.wide]="isWide(f)">
+    <div class="lab">
+      {{ f.label }}
+      @if (f.mandatory) { <span class="cf-req" title="Required">*</span> }
+      @if (f.readOnly) { <span class="cf-ro">Read-only</span> }
+    </div>
+    <div class="cell">
+      @if (!canEdit() || f.readOnly) {
+        <span class="pv ro" [title]="f.readOnly ? 'Read-only in this layout' : 'Only Admins, the owner and project Managers can edit'">
+          @if (blank) {
+            <span class="muted">Not set</span>
+          } @else if (f.fieldType === 'MULTI_PICKLIST') {
+            @for (label of multiLabels(f); track $index) { <span class="badge">{{ label }}</span> }
+          } @else if (f.fieldType === 'LONG_TEXT') {
+            <span class="cf-long">{{ v }}</span>
+          } @else {
+            {{ text(f) }}
+          }
+        </span>
+      } @else {
+        @switch (f.fieldType) {
+          @case ('CHECKBOX') {
+            <button class="pill" type="button" role="checkbox" [attr.aria-checked]="!!v" [attr.aria-label]="f.label" (click)="toggleCheck(f)">
+              <span class="box" [class.on]="v">{{ v ? '✓' : '' }}</span>{{ v ? 'Yes' : 'No' }}
+            </button>
+          }
+          @case ('DATE') {
+            <button #pb class="pill" type="button" [class.open]="pop() === k" [class.empty]="blank" aria-haspopup="dialog" [attr.aria-expanded]="pop() === k" (click)="openPop(f)">
+              {{ blank ? 'Set ' + f.label.toLowerCase() : text(f) }}
+            </button>
+            <py-popover [open]="pop() === k" [anchor]="pb" [label]="f.label" (closed)="closePop(k)">
+              <div class="pop inpop cal">
+                <py-calendar [value]="blank ? null : '' + v" [clearable]="!f.mandatory" (picked)="pickDate(f, $event)" />
+                @if (err && err.k === k) { <p class="py-field__error"><py-icon name="alert" />{{ err.msg }}</p> }
+              </div>
+            </py-popover>
+          }
+          @case ('PICKLIST') { <ng-container *ngTemplateOutlet="choose" /> }
+          @case ('USER') { <ng-container *ngTemplateOutlet="choose" /> }
+          @case ('MULTI_PICKLIST') { <ng-container *ngTemplateOutlet="choose" /> }
+          @default {
+            @if (editing() === k) {
+              <div class="inl-wrap">
+                @if (f.fieldType === 'LONG_TEXT') {
+                  <textarea class="inl" rows="4" pyAutofocus [attr.aria-label]="f.label" [attr.maxlength]="maxLength(f)" [value]="draft()"
+                            (input)="draft.set($any($event.target).value)" (keydown)="onKey($event, f)" (blur)="onBlur(f)"></textarea>
+                } @else {
+                  <input class="inl" pyAutofocus [type]="f.fieldType === 'TEXT' ? 'text' : 'number'" [attr.step]="f.fieldType === 'NUMBER' ? 1 : f.fieldType === 'DECIMAL' ? 'any' : null"
+                         [attr.aria-label]="f.label" [attr.maxlength]="maxLength(f)" [value]="draft()"
+                         (input)="draft.set($any($event.target).value)" (keydown)="onKey($event, f)" (blur)="onBlur(f)" />
+                }
+                @if (err && err.k === k) { <p class="py-field__error"><py-icon name="alert" />{{ err.msg }}</p> }
+                @if (f.fieldType === 'LONG_TEXT') { <p class="cf-hint-line">Click outside to save. Esc to cancel.</p> }
+              </div>
+            } @else {
+              <button class="pill" type="button" [class.empty]="blank" (click)="startEdit(f)">
+                @if (blank) { Set {{ f.label.toLowerCase() }} } @else if (f.fieldType === 'LONG_TEXT') { <span class="cf-long">{{ v }}</span> } @else { {{ text(f) }} }
+              </button>
+            }
+          }
+        }
+        @if (flash() === k) { <span class="saved">✓ Saved</span> }
+        @if (err && err.k === k && pop() !== k && editing() !== k) { <p class="py-field__error"><py-icon name="alert" />{{ err.msg }}</p> }
+      }
+
+      <ng-template #choose>
+        <button #pb class="pill" type="button" [class.open]="pop() === k" [class.empty]="blank" aria-haspopup="listbox" [attr.aria-expanded]="pop() === k" (click)="openPop(f)">
+          @if (blank) {
+            {{ f.fieldType === 'MULTI_PICKLIST' ? 'Add ' : 'Set ' }}{{ f.label.toLowerCase() }}
+          } @else if (f.fieldType === 'PICKLIST') {
+            <span class="dot"></span>{{ text(f) }}
+          } @else if (f.fieldType === 'USER') {
+            <span class="av">{{ initials(personName(f)) }}</span>{{ text(f) }}
+          } @else {
+            {{ text(f) }}
+          }
+        </button>
+        <py-popover [open]="pop() === k" [anchor]="pb" [label]="f.label" (closed)="closePop(k)">
+          <div class="pop inpop">
+            <input type="text" class="search" pyAutofocus [placeholder]="f.fieldType === 'MULTI_PICKLIST' ? 'Pick…' : 'Search…'"
+                   [attr.aria-label]="'Search ' + f.label" [value]="query()" (input)="query.set($any($event.target).value)" />
+            <div class="list">
+              @for (c of choices(f); track c.id) {
+                @if (f.fieldType === 'MULTI_PICKLIST') {
+                  <button class="opt" type="button" role="menuitemcheckbox" [attr.aria-checked]="chosen(f).includes(c.id)" (click)="pick(f, c.id)">
+                    <span class="box" [class.on]="chosen(f).includes(c.id)">{{ chosen(f).includes(c.id) ? '✓' : '' }}</span>{{ c.label }}
+                  </button>
+                } @else {
+                  <button class="opt" type="button" (click)="pick(f, c.id)">
+                    @if (c.person) { <span class="av">{{ initials(c.label) }}</span> } @else { <span class="dot"></span> }
+                    {{ c.label }}@if (v === c.id) { <span class="tick">✓</span> }
+                  </button>
+                }
+              } @empty {
+                <div class="cf-none">No match</div>
+              }
+              @if (canClear(f)) { <button class="opt muted" type="button" (click)="pick(f, '')">Clear</button> }
+            </div>
+            @if (err && err.k === k) { <p class="py-field__error"><py-icon name="alert" />{{ err.msg }}</p> }
+            @if (f.fieldType === 'MULTI_PICKLIST') { <div class="cf-hint">Each tick saves. Esc to close.</div> }
+          </div>
+        </py-popover>
+      </ng-template>
+    </div>
+  </div>
+}

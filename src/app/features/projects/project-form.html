@@ -98,6 +98,35 @@
             </label>
           </div>
         </section>
+
+        @if (!id() && layouts().length > 1) {
+          <section class="panel pf-card">
+            <h2>Layout</h2>
+            <py-field label="Layout" for="pj-layout" hint="Decides which extra fields and sections this project has. You can change it later in the project settings.">
+              <select id="pj-layout" class="py-select" (change)="setLayout($any($event.target).value)">
+                @for (l of layouts(); track l.id) {
+                  <option [value]="l.id" [selected]="l.id === layoutId()">{{ l.name }}{{ l.defaultLayout ? ' (default)' : '' }}</option>
+                }
+              </select>
+            </py-field>
+          </section>
+        }
+        @if (project() && layout(); as l) {
+          <p class="pf-layout">Layout: <b>{{ l.name }}</b>. <a [routerLink]="['/p', active.portal()?.slug, 'projects', id(), 'settings']">Change it in project settings</a>.</p>
+        }
+        @for (sec of sections(); track sec.id) {
+          <section class="panel pf-card cf-sec">
+            <h2>{{ sec.name }}</h2>
+            <div class="cf-grid">
+              @for (f of sec.fields; track f.apiName) {
+                <div class="cf-item" [class.wide]="isWide(f)">
+                  <py-custom-value [field]="f" [value]="customValues()[f.apiName] ?? null" (valueChange)="setValue(f.apiName, $event)"
+                                   [error]="customErrors()[f.apiName] || null" [people]="people.activeMembers()" [disabled]="f.readOnly" />
+                </div>
+              }
+            </div>
+          </section>
+        }
       </div>
 
       <aside class="pf-side">
