@@ -17,6 +17,9 @@ import { ActivePortalService } from '../../core/portal/active-portal.service';
       @if (active.can('USERS_VIEW')) {
         <a [routerLink]="['/p', active.portal()?.slug, 'settings', 'users']" routerLinkActive="active">Users</a>
       }
+      @if (active.can('AUDIT_VIEW')) {
+        <a [routerLink]="['/p', active.portal()?.slug, 'settings', 'audit']" routerLinkActive="active">Audit log</a>
+      }
       <a [routerLink]="['/p', active.portal()?.slug, 'settings', 'preferences']" routerLinkActive="active">My preferences</a>
     </nav>
     <router-outlet />

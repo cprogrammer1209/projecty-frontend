@@ -122,6 +122,12 @@ export const routes: Routes = [
             loadComponent: () => import('./features/settings/users/users-page').then((m) => m.UsersPage),
           },
           {
+            path: 'audit',
+            data: { crumb: 'Audit log' },
+            canActivate: [permissionGuard('AUDIT_VIEW')],
+            loadComponent: () => import('./features/settings/audit/audit-page').then((m) => m.AuditPage),
+          },
+          {
             path: 'preferences',
             data: { crumb: 'My preferences' },
             loadComponent: () => import('./features/settings/my-preferences').then((m) => m.MyPreferences),

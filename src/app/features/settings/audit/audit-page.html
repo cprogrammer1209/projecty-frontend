@@ -1,0 +1,62 @@
+@if (error(); as message) {
+  <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+}
+
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>Audit log</h2>
+      <p>Every change to portal settings and people in {{ active.portal()?.name }}. Entries can't be edited or deleted.</p>
+    </div>
+  </div>
+
+  <div class="filters">
+    <select class="py-select status" aria-label="Filter by action" (change)="onAction($event)">
+      <option value="">All actions</option>
+      @for (a of actions; track a.value) { <option [value]="a.value">{{ a.label }}</option> }
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>When</th><th>Action</th><th>Who</th><th>Affected</th><th>Details</th></tr></thead>
+      <tbody>
+        @if (!data()) {
+          <tr><td colspan="5" class="empty">Loading audit log…</td></tr>
+        }
+        @for (e of data()?.items ?? []; track e.id) {
+          <tr>
+            <td class="nowrap">{{ e.occurredAt | pyDate: dateTimePattern() }}</td>
+            <td><span class="badge">{{ actionLabel(e.action) }}</span></td>
+            <td>
+              <div class="person">
+                <span class="py-avatar py-avatar--sm">{{ initials(e.actorName ?? '') }}</span>
+                <div>
+                  <strong>{{ e.actorName ?? 'Unknown' }}</strong>
+                  @if (e.actorType === 'ADMIN') { <small>Platform support</small> }
+                </div>
+              </div>
+            </td>
+            <td>{{ e.targetName ?? '—' }}</td>
+            <td>{{ e.detail }}</td>
+          </tr>
+        } @empty {
+          @if (data()) { <tr><td colspan="5" class="empty">No events match.</td></tr> }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (data(); as d) {
+    <div class="pager">
+      <span class="py-caption">{{ rangeLabel(d) }}</span>
+      <div class="pager-actions">
+        <select class="py-select pager-size" aria-label="Rows per page" (change)="onSize($event)">
+          @for (n of pageSizes; track n) { <option [value]="n" [selected]="n === size()">{{ n }} per page</option> }
+        </select>
+        <button class="py-btn py-btn--secondary" type="button" [disabled]="d.page === 0" (click)="go(-1)">Previous</button>
+        <button class="py-btn py-btn--secondary" type="button" [disabled]="d.page + 1 >= d.totalPages" (click)="go(1)">Next</button>
+      </div>
+    </div>
+  }
+</section>

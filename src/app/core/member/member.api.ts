@@ -6,7 +6,7 @@ import { unwrap } from '../api/api-error';
 import { AppResponse } from '../api/api.types';
 
 /** Permission names from the backend's PermissionConstants. */
-export type Permission = 'PORTAL_SETTINGS_MANAGE' | 'USERS_VIEW' | 'USERS_MANAGE';
+export type Permission = 'PORTAL_SETTINGS_MANAGE' | 'USERS_VIEW' | 'USERS_MANAGE' | 'AUDIT_VIEW';
 
 export interface MyMembership {
   profileId: string;

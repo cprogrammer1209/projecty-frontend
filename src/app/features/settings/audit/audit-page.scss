@@ -1,0 +1,20 @@
+:host { display: flex; flex-direction: column; gap: 16px; max-width: 1000px; }
+.panel { background: var(--py-surface-0); border: 1px solid var(--py-border); border-radius: 10px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; }
+.panel-head h2 { font: 600 15px/22px var(--py-font-ui); margin: 0; }
+.panel-head p { margin: 2px 0 0; font-size: 12px; color: var(--py-ink-muted); }
+.filters { display: flex; gap: 8px; padding: 0 18px 12px; }
+.status { width: 200px; }
+.table-wrap { overflow-x: auto; border-top: 1px solid var(--py-border); }
+table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 13px; }
+th { text-align: left; font: 600 11px/16px var(--py-font-ui); text-transform: uppercase; letter-spacing: .05em; color: var(--py-ink-muted); background: var(--py-surface-1); padding: 9px 14px; }
+td { padding: 10px 14px; border-top: 1px solid var(--py-border); vertical-align: middle; }
+.nowrap { white-space: nowrap; }
+.person { display: flex; align-items: center; gap: 10px; }
+.person strong { display: block; font-weight: 500; }
+.person small { display: block; color: var(--py-ink-muted); font-size: 12px; }
+.badge { padding: 3px 8px; border-radius: 5px; font-size: 11px; background: var(--py-surface-2); color: var(--py-ink-muted); white-space: nowrap; }
+.empty { text-align: center; color: var(--py-ink-muted); padding: 22px; }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 18px; border-top: 1px solid var(--py-border); }
+.pager-actions { display: flex; align-items: center; gap: 8px; }
+.pager-size { width: 130px; }
