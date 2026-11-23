@@ -1,0 +1,24 @@
+.lset .ts-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.lset .fl-inline { display: inline-flex; align-items: center; gap: 8px; color: var(--mut); }
+.lset .strow { display: flex; align-items: center; gap: 10px; padding: 8px 12px; min-height: 44px; }
+.lset .strow[draggable='true'] { cursor: grab; }
+.lset .strow.over { box-shadow: inset 0 2px 0 var(--acc); }
+.lset .strow.dragging { opacity: 0.45; }
+.lset .strow .grip { color: var(--mut2); width: 14px; text-align: center; user-select: none; }
+.lset .strow .so { display: inline-flex; flex-direction: column; }
+.lset .strow .so .ibtn { height: 16px; width: 22px; }
+.lset .strow .so .ibtn[disabled] { opacity: 0.25; cursor: default; }
+.lset .strow .dotbtn { border: 0; background: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.lset .strow .dotbtn:hover { background: var(--hover); }
+.lset .strow .dot { width: 12px; height: 12px; }
+.lset .strow .sn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lset .strow .sn .use { font-size: 12px; }
+.lset .strow .namebtn { border: 1px solid transparent; background: none; padding: 2px 6px; margin-left: -6px; border-radius: 5px; cursor: text; font: inherit; font-weight: 500; color: inherit; }
+.lset .strow .namebtn:hover { background: var(--hover); }
+.lset .strow .sr { display: flex; align-items: center; gap: 8px; }
+.lset .strow.add { background: var(--side); }
+.lset .strow.add input { flex: 1; }
+.lset .swatches { display: grid; grid-template-columns: repeat(4, 28px); gap: 6px; padding: 6px 8px 8px; }
+.lset .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; display: grid; place-items: center; color: #fff; padding: 0; }
+.lset .swatch:hover { border-color: var(--tx); }
+.lset .pop-h { font-size: 12px; color: var(--mut); padding: 2px 8px 0; }

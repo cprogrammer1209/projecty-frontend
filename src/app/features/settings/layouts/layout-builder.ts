@@ -14,8 +14,9 @@ import {
   untracked,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
+import { settingsEntity } from '../settings-entity';
 import { ApiError } from '../../../core/api/api.types';
 import { CustomField, CustomFieldApi, FieldType } from '../../../core/customfield/custom-field.api';
 import { LayoutApi, LayoutEditor, LayoutPlacement } from '../../../core/customfield/layout.api';
@@ -90,6 +91,7 @@ export class LayoutBuilder implements OnInit, HasUnsavedChanges {
   readonly id = input.required<string>();
 
   private readonly layoutApi = inject(LayoutApi);
+  protected readonly entity = settingsEntity(inject(ActivatedRoute));
   private readonly fieldApi = inject(CustomFieldApi);
   private readonly toast = inject(ToastService);
   private readonly saveBar = inject(SaveBarService);
@@ -508,7 +510,7 @@ export class LayoutBuilder implements OnInit, HasUnsavedChanges {
     this.fieldError.set(null);
     this.fieldApi
       .create({
-        entityType: 'PROJECT',
+        entityType: this.entity.type,
         label: v.label.trim(),
         description: null,
         fieldType: v.type,

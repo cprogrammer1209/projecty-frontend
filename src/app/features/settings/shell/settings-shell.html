@@ -30,6 +30,21 @@
             </a>
           }
         </div>
+        <div class="ni" style="color: var(--tx); font-weight: 500; cursor: default">
+          <py-icon name="tasks" /><span>Tasks</span>
+        </div>
+        <div class="sub">
+          @for (p of taskPages(); track p.id) {
+            <a
+              class="ni"
+              [routerLink]="link('tasks/' + p.id)"
+              routerLinkActive
+              ariaCurrentWhenActive="page"
+            >
+              <py-icon [name]="p.icon" /><span>{{ p.label }}</span>
+            </a>
+          }
+        </div>
         @for (m of soon; track m.id) {
           <a class="ni dim" [routerLink]="link(m.id)" routerLinkActive ariaCurrentWhenActive="page">
             <py-icon [name]="m.id" /><span>{{ m.name }}</span

@@ -35,6 +35,8 @@ export interface Project {
   customValues: Record<string, unknown>;
   /** The layout the project uses. */
   layoutId: string;
+  /** The task layout of the project; null = the portal's default task layout. */
+  taskLayoutId?: string | null;
 }
 
 /** Work stores only the user id; names come from the portal's people (PortalPeople). */

@@ -16,7 +16,11 @@ export type Permission =
   | 'PROJECTS_EDIT'
   | 'PROJECTS_DELETE'
   | 'CUSTOM_FIELDS_VIEW'
-  | 'CUSTOM_FIELDS_MANAGE';
+  | 'CUSTOM_FIELDS_MANAGE'
+  | 'TASKS_VIEW'
+  | 'TASKS_CREATE'
+  | 'TASKS_EDIT'
+  | 'TASKS_DELETE';
 
 export interface MyMembership {
   profileId: string;

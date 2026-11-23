@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, concat, last, map, of, startWith } from 'rxjs';
 
 import { ApiError } from '../../../core/api/api.types';
@@ -21,6 +21,7 @@ import { ValueField } from '../../../shared/ui/custom-value/custom-value.util';
 import { Field } from '../../../shared/ui/field/field';
 import { controlError, focusFirstInvalid, setServerError } from '../../../shared/ui/form-errors';
 import { Icon } from '../../../shared/ui/icon/icon';
+import { settingsEntity } from '../settings-entity';
 import { FIELD_TYPES, NUMERIC_TYPES, PICK_TYPES, UNIQUE_TYPES } from './field-types';
 
 /** One choice row in the editor. `id` is set once the server knows the choice. */
@@ -57,6 +58,7 @@ export class FieldForm implements OnInit {
 
   private readonly api = inject(CustomFieldApi);
   private readonly router = inject(Router);
+  protected readonly entity = settingsEntity(inject(ActivatedRoute));
   private readonly toast = inject(ToastService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly auth = inject(AuthService);
@@ -138,7 +140,7 @@ export class FieldForm implements OnInit {
   protected readonly defaultDraft = computed<ValueField>(() => ({
     ...this.draft(),
     label: 'Default value',
-    description: 'Filled in when a project is created. Optional.',
+    description: `Filled in when a ${this.entity.noun} is created. Optional.`,
     mandatory: false,
     apiName: 'cf_default',
   }));
@@ -153,7 +155,7 @@ export class FieldForm implements OnInit {
   }
 
   protected backLink(): string[] {
-    return ['/p', this.active.portal()?.slug ?? '', 'settings', 'projects', 'fields'];
+    return ['/p', this.active.portal()?.slug ?? '', 'settings', this.entity.path, 'fields'];
   }
 
   protected labelError(): string | null {
@@ -287,7 +289,7 @@ export class FieldForm implements OnInit {
   private createInput(): CustomFieldInput {
     const v = this.form.getRawValue();
     return {
-      entityType: 'PROJECT',
+      entityType: this.entity.type,
       label: v.label.trim(),
       description: v.description.trim() || null,
       fieldType: v.fieldType,
@@ -351,7 +353,7 @@ export class FieldForm implements OnInit {
 
   private loadField(id: string): void {
     this.loading.set(true);
-    this.api.listAll().subscribe({
+    this.api.listAll(this.entity.type).subscribe({
       next: (list) => {
         this.loading.set(false);
         const f = list.find((x) => x.id === id);
@@ -391,7 +393,7 @@ export class FieldForm implements OnInit {
 
   /** After a failed save, show the choices as the server holds them now (some changes may have gone through). */
   private resync(id: string): void {
-    this.api.listAll().subscribe({
+    this.api.listAll(this.entity.type).subscribe({
       next: (list) => {
         const f = list.find((x) => x.id === id);
         if (f) {

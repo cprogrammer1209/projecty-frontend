@@ -6,6 +6,16 @@ import { unwrap } from '../api/api-error';
 import { AppResponse } from '../api/api.types';
 import { CustomField, CustomFieldOption, EntityType, FieldType } from './custom-field.api';
 
+/** One status of a TASK layout. Open means still being worked on, Closed means done. */
+export interface LayoutStatus {
+  id: string;
+  name: string;
+  statusType: 'OPEN' | 'CLOSED';
+  color: string | null;
+  sortOrder: number;
+  defaultStatus: boolean;
+}
+
 /** A field as a layout shows it: the field's definition with the layout's rules already applied. */
 export interface LayoutField {
   fieldId: string;
@@ -45,6 +55,8 @@ export interface Layout {
   defaultLayout: boolean;
   active: boolean;
   sections: LayoutSection[];
+  /** TASK layouts only. */
+  statuses?: LayoutStatus[];
 }
 
 /** One row of the layouts list. `usage` is how many records use the layout. */
@@ -87,6 +99,8 @@ export interface LayoutEditor {
   usage: number;
   sections: LayoutEditorSection[];
   fields: CustomField[];
+  /** TASK layouts only. */
+  statuses?: LayoutStatus[];
 }
 
 /** What Save sends: the whole layout replaces the stored one. Section ids are not sent (the server assigns them). */
@@ -133,6 +147,34 @@ export class LayoutApi {
 
   activate(id: string): Observable<LayoutSummary> {
     return this.http.post<AppResponse<LayoutSummary>>(`/api/work/layouts/${id}/activate`, null).pipe(unwrap());
+  }
+
+  /** Statuses of a TASK layout, in order (CUSTOM_FIELDS_VIEW). */
+  statuses(layoutId: string): Observable<LayoutStatus[]> {
+    return this.http.get<AppResponse<LayoutStatus[]>>(`/api/work/layouts/${layoutId}/statuses`).pipe(unwrap());
+  }
+
+  addStatus(layoutId: string, input: { name: string; statusType: 'OPEN' | 'CLOSED'; color?: string | null }): Observable<LayoutStatus[]> {
+    return this.http.post<AppResponse<LayoutStatus[]>>(`/api/work/layouts/${layoutId}/statuses`, input).pipe(unwrap());
+  }
+
+  /** Partial: only the properties given change. A colour of "" clears it. */
+  updateStatus(
+    layoutId: string,
+    statusId: string,
+    input: { name?: string; statusType?: 'OPEN' | 'CLOSED'; color?: string; defaultStatus?: true },
+  ): Observable<LayoutStatus[]> {
+    return this.http
+      .patch<AppResponse<LayoutStatus[]>>(`/api/work/layouts/${layoutId}/statuses/${statusId}`, input)
+      .pipe(unwrap());
+  }
+
+  deleteStatus(layoutId: string, statusId: string): Observable<LayoutStatus[]> {
+    return this.http.delete<AppResponse<LayoutStatus[]>>(`/api/work/layouts/${layoutId}/statuses/${statusId}`).pipe(unwrap());
+  }
+
+  orderStatuses(layoutId: string, ids: string[]): Observable<LayoutStatus[]> {
+    return this.http.put<AppResponse<LayoutStatus[]>>(`/api/work/layouts/${layoutId}/statuses/order`, { ids }).pipe(unwrap());
   }
 
   deactivate(id: string): Observable<LayoutSummary> {

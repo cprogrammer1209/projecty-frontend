@@ -1,0 +1,23 @@
+@let t = task();
+<span class="pc">
+  <button type="button" class="pb" data-pick="priority" [title]="'Priority: ' + prioLabel() + ' (P)'" [attr.aria-label]="'Priority: ' + prioLabel()" (click)="pick('priority', $event)"><py-tv-glyph [icon]="{ k: 'prio', p: t.priority }" /></button>
+  <button type="button" class="chk" [attr.aria-label]="'Select ' + t.key" [attr.aria-pressed]="checked()" (click)="check($event)"><span class="cbx">{{ checked() ? '✓' : '' }}</span></button>
+</span>
+<span class="c-key mono">{{ t.key }}</span>
+<button type="button" class="si" data-pick="status" [title]="'Status: ' + t.statusName + ' (S)'" [attr.aria-label]="'Status: ' + t.statusName" (click)="pick('status', $event)"><py-tv-glyph [icon]="statusIcon()" /></button>
+<span class="c-title">
+  @if (t.parentId) { <span class="subi" title="Subtask"><py-tv-icon n="sub" [size]="12" /></span> }
+  <a class="tt" [routerLink]="href().link" [queryParams]="href().query">{{ t.title }}</a>
+  @if (t.subtaskCount) {
+    <span class="subc" [title]="t.completedSubtaskCount + ' of ' + t.subtaskCount + ' subtasks closed'"><py-tv-icon n="sub" [size]="11" />{{ t.completedSubtaskCount }}/{{ t.subtaskCount }}</span>
+  }
+  @for (tag of t.tags.slice(0, 2); track tag) { <span class="tag">{{ tag }}</span> }
+</span>
+<span class="hint"><span class="kbd">S</span><span class="kbd">P</span><span class="kbd">A</span></span>
+@if (store.source.portal) { <span class="c-pj" [title]="t.projectName">{{ t.projectName }}</span> }
+<button type="button" class="asg" data-pick="owner" [title]="'Owners: ' + (names().join(', ') || 'none') + ' (A)'" aria-label="Owners" (click)="pick('owner', $event)"><py-tv-owners [names]="names()" /></button>
+<span class="c-due">
+  <button type="button" class="due" data-pick="due" [class.over]="overdue()" [class.none]="!t.dueDate" [title]="(t.dueDate ? (overdue() ? 'Overdue' : 'Due date') : 'Set a due date') + ' (D)'" aria-label="Due date" (click)="pick('due', $event)">
+    @if (t.dueDate) { {{ t.dueDate | pyDay }} } @else { <py-tv-icon n="cal" [size]="13" /> }
+  </button>
+</span>

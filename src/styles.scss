@@ -1,6 +1,7 @@
 @use './styles/projecty-tokens.css';
 @use './styles/settings-linear';
 @use './styles/custom-fields';
+@use './styles/tasks';
 
 /* Base */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

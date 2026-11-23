@@ -7,6 +7,7 @@ import { CustomFieldApi } from '../../core/customfield/custom-field.api';
 import { Layout, LayoutApi } from '../../core/customfield/layout.api';
 import { ActivePortalService } from '../../core/portal/active-portal.service';
 import { ProjectApi, ProjectDetail } from '../../core/project/project.api';
+import { TaskApi, TaskLayout } from '../../core/task/task.api';
 import { isEmptyValue } from '../../shared/ui/custom-value/custom-value.util';
 import { Icon } from '../../shared/ui/icon/icon';
 
@@ -27,6 +28,7 @@ export class ProjectSettings implements OnInit {
   private readonly projectApi = inject(ProjectApi);
   private readonly layoutApi = inject(LayoutApi);
   private readonly fieldApi = inject(CustomFieldApi);
+  private readonly taskApi = inject(TaskApi);
   protected readonly active = inject(ActivePortalService);
 
   protected readonly detail = signal<ProjectDetail | null>(null);
@@ -37,6 +39,21 @@ export class ProjectSettings implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly notice = signal<string | null>(null);
   protected readonly missing = signal(false);
+
+  /** The task layout picker: the project's choice (null = the portal's default), the active TASK layouts and what is selected. */
+  protected readonly taskLayouts = signal<TaskLayout[]>([]);
+  protected readonly taskSelected = signal<string | null>(null);
+  protected readonly taskBusy = signal(false);
+  protected readonly taskNotice = signal<string | null>(null);
+  protected readonly taskError = signal<string | null>(null);
+  protected readonly taskCurrent = computed(() => {
+    const own = this.detail()?.project.taskLayoutId;
+    const list = this.taskLayouts();
+    return own ?? list.find((l) => l.defaultLayout)?.id ?? null;
+  });
+  protected readonly taskPicked = computed(() => this.taskLayouts().find((l) => l.id === this.taskSelected()) ?? null);
+  protected readonly taskChanged = computed(() => !!this.taskSelected() && this.taskSelected() !== this.taskCurrent());
+  protected readonly taskShows = computed(() => (this.taskPicked()?.sections ?? []).filter((s) => s.fields.length));
 
   /** Active layouts, plus the project's own when it was deactivated since. */
   protected readonly layouts = computed(() => {
@@ -66,12 +83,20 @@ export class ProjectSettings implements OnInit {
   });
 
   ngOnInit(): void {
+    this.layoutApi.active('TASK').subscribe({
+      next: (list) => {
+        this.taskLayouts.set(list as TaskLayout[]);
+        this.taskSelected.set(this.taskCurrent());
+      },
+      error: () => {},
+    });
     forkJoin([this.projectApi.get(this.id()), this.layoutApi.active(), this.fieldApi.list()]).subscribe({
       next: ([detail, layouts, fields]) => {
         this.activeLayouts.set(layouts);
         this.labels.set(Object.fromEntries(fields.map((f) => [f.apiName, f.label])));
         this.detail.set(detail);
         this.selected.set(detail.project.layoutId);
+        this.taskSelected.set(this.taskCurrent());
       },
       error: (err: ApiError) => {
         if (err.code === 'PROJECT_NOT_FOUND') {
@@ -112,6 +137,38 @@ export class ProjectSettings implements OnInit {
       error: (err: ApiError) => {
         this.error.set(err.message);
         this.busy.set(false);
+      },
+    });
+  }
+
+  protected chooseTask(id: string): void {
+    this.taskSelected.set(id);
+    this.taskNotice.set(null);
+  }
+
+  protected resetTask(): void {
+    this.taskSelected.set(this.taskCurrent());
+  }
+
+  protected scrollTo(id: string): void {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  protected applyTask(): void {
+    const l = this.taskPicked();
+    if (!l) return;
+    this.taskBusy.set(true);
+    this.taskError.set(null);
+    this.taskApi.setProjectTaskLayout(this.id(), l.id).subscribe({
+      next: (fresh) => {
+        this.detail.set(fresh);
+        this.taskSelected.set(this.taskCurrent());
+        this.taskNotice.set(`${l.name} is now the task layout. New tasks use it; existing tasks keep theirs until changed.`);
+        this.taskBusy.set(false);
+      },
+      error: (err: ApiError) => {
+        this.taskError.set(err.message);
+        this.taskBusy.set(false);
       },
     });
   }

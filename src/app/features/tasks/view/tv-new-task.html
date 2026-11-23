@@ -1,0 +1,34 @@
+<div class="tv-scrim" id="tv-modal" (mousedown)="$event.target === $event.currentTarget && closed.emit()">
+  <form class="tv-modal" role="dialog" aria-modal="true" aria-label="New task" novalidate (submit)="$event.preventDefault(); submit()">
+    <div class="ph">
+      @if (projects().length > 1) {
+        <select class="py-select" id="nt-project" name="projectId" aria-label="Project" (change)="setProject($any($event.target).value)">
+          @for (p of projects(); track p.id) { <option [value]="p.id" [selected]="p.id === projectId()">{{ p.name }} ({{ p.key }})</option> }
+        </select>
+      } @else { <b>{{ project()?.key }}</b> }
+      <span class="mut">›</span><span>New task</span><span class="sp"></span>
+      <button type="button" class="ibtn" aria-label="Close" (click)="closed.emit()"><py-tv-icon n="x" /></button>
+    </div>
+    <div class="pbody">
+      <input class="ttl-in" id="nt-title" name="title" pyAutofocus maxlength="200" autocomplete="off" placeholder="Task title" aria-label="Title" [value]="title()" (input)="title.set($any($event.target).value)" />
+      <textarea class="desc" id="nt-desc" name="desc" placeholder="Add description…" aria-label="Description" rows="3" [value]="desc()" (input)="desc.set($any($event.target).value)"></textarea>
+      <div class="props">
+        @if (status(); as s) {
+          <button type="button" class="pp" data-mp="status" (click)="pick('status', $event)"><py-tv-glyph [icon]="store.statusIcon(s)" />{{ s.name }}</button>
+        }
+        <button type="button" class="pp" [class.mut]="priority() === 'NONE'" data-mp="priority" (click)="pick('priority', $event)"><py-tv-glyph [icon]="{ k: 'prio', p: priority() }" />{{ priority() === 'NONE' ? 'Priority' : prioLabel[priority()] }}</button>
+        <button type="button" class="pp" [class.mut]="!ownerNames().length" data-mp="owner" (click)="pick('owner', $event)"><py-tv-glyph [icon]="{ k: 'person', name: ownerNames()[0] }" [size]="16" />{{ ownerNames().length ? ownerNames().join(', ') : 'Owners' }}</button>
+        <button type="button" class="pp" [class.mut]="!dueDate()" data-mp="due" (click)="pick('due', $event)"><py-tv-icon n="cal" />{{ dueDate() ? (dueDate() | pyDay) : 'Due date' }}</button>
+        @if (lists().length) {
+          <button type="button" class="pp" data-mp="list" (click)="pick('list', $event)"><py-tv-icon n="stack" />{{ list().name }}</button>
+        }
+      </div>
+      @if (error(); as message) { <p class="py-field__error" id="nt-error"><py-icon name="alert" />{{ message }}</p> }
+    </div>
+    <div class="pf">
+      <label class="more"><input type="checkbox" id="nt-more" [checked]="more()" (change)="more.set($any($event.target).checked)" /> Create more</label>
+      <button type="button" class="tb" (click)="closed.emit()">Cancel</button>
+      <button type="submit" class="tb pri" id="nt-create" [disabled]="busy()">Create task</button>
+    </div>
+  </form>
+</div>

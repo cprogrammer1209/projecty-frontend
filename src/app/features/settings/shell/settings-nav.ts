@@ -22,6 +22,12 @@ export const PROJECT_PAGES: NavPage[] = [
   { id: 'templates', label: 'Templates', icon: 'templates', permission: 'PROJECTS_VIEW' },
 ];
 
+export const TASK_PAGES: NavPage[] = [
+  { id: 'fields', label: 'Fields', icon: 'fields', permission: 'CUSTOM_FIELDS_VIEW' },
+  { id: 'layouts', label: 'Layouts', icon: 'layouts', permission: 'CUSTOM_FIELDS_VIEW' },
+  { id: 'statuses', label: 'Statuses', icon: 'statuses', permission: 'CUSTOM_FIELDS_VIEW' },
+];
+
 export interface SoonModule {
   id: string;
   name: string;
@@ -30,12 +36,6 @@ export interface SoonModule {
 }
 
 export const SOON_MODULES: SoonModule[] = [
-  {
-    id: 'tasks',
-    name: 'Tasks',
-    note: 'Arrives with Step 6',
-    pages: ['Fields', 'Layouts', 'Statuses'],
-  },
   {
     id: 'issues',
     name: 'Issues',

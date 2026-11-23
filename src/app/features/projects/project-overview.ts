@@ -14,6 +14,9 @@ import {
   ProjectRole,
   ProjectStatus as ProjectStatusItem,
 } from '../../core/project/project.api';
+import { Task, TaskApi } from '../../core/task/task.api';
+import { isOverdue } from '../tasks/task-ui';
+import { ProjectTabs } from '../tasks/project-tabs';
 import { PyDatePipe } from '../../shared/pipes/py-date.pipe';
 import { PyDayPipe } from '../../shared/pipes/py-day.pipe';
 import { Icon } from '../../shared/ui/icon/icon';
@@ -29,7 +32,7 @@ import { PropertyList, SaveValue } from './property-list';
  */
 @Component({
   selector: 'py-project-overview',
-  imports: [RouterLink, PyDatePipe, PyDayPipe, Icon, ProjectStatus, PropertyList],
+  imports: [RouterLink, PyDatePipe, PyDayPipe, Icon, ProjectStatus, PropertyList, ProjectTabs],
   templateUrl: './project-overview.html',
   styleUrl: './projects.scss',
 })
@@ -39,11 +42,20 @@ export class ProjectOverview implements OnInit {
 
   private readonly projectApi = inject(ProjectApi);
   private readonly router = inject(Router);
+  private readonly taskApi = inject(TaskApi);
   protected readonly auth = inject(AuthService);
   protected readonly active = inject(ActivePortalService);
   protected readonly people = inject(PortalPeople);
 
   protected readonly detail = signal<ProjectDetail | null>(null);
+  /** Every task of the project (null until loaded, or when the caller can't see tasks). */
+  protected readonly tasks = signal<Task[] | null>(null);
+  protected readonly taskStats = computed(() => {
+    const all = this.tasks();
+    if (!all) return null;
+    const open = all.filter((t) => t.statusType === 'OPEN');
+    return { total: all.length, open: open.length, closed: all.length - open.length, overdue: open.filter((t) => isOverdue(t)).length };
+  });
   protected readonly statuses = signal<ProjectStatusItem[]>([]);
   protected readonly missing = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -60,6 +72,10 @@ export class ProjectOverview implements OnInit {
     const inProject = new Set((this.detail()?.members ?? []).map((m) => m.userId));
     return this.people.activeMembers().filter((m) => !inProject.has(m.userId));
   });
+
+  protected progressOf(s: { total: number; closed: number }): number {
+    return Math.round((s.closed * 100) / s.total);
+  }
 
   /** Collapsed sections, remembered per person in this browser: { "<layoutId>:<sectionId>": true }. */
   private readonly collapsedKey = 'py-cf-collapsed';
@@ -186,6 +202,9 @@ export class ProjectOverview implements OnInit {
     this.people.load();
     this.projectApi.statuses().subscribe({ next: (list) => this.statuses.set(list), error: () => {} });
     this.load();
+    if (this.active.can('TASKS_VIEW')) {
+      this.taskApi.tasks(this.id()).subscribe({ next: (list) => this.tasks.set(list), error: () => {} });
+    }
   }
 
   protected dateTimePattern(): string {

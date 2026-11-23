@@ -20,7 +20,7 @@
             <div class="bmeta">
               @if (d.defaultLayout) { <span class="chip acc">Default</span> }
               @if (!d.active) { <span class="chip">Inactive</span> }
-              <span class="chip">Used by {{ plural(d.usage, 'project') }}</span>
+              <span class="chip">Used by {{ plural(d.usage, entity.noun) }}</span>
             </div>
           </div>
           <div class="cv-modes">

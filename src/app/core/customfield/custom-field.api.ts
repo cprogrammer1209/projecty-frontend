@@ -6,7 +6,7 @@ import { unwrap } from '../api/api-error';
 import { AppResponse } from '../api/api.types';
 
 /** The module a field belongs to. Projects today; tasks and others later. */
-export type EntityType = 'PROJECT';
+export type EntityType = 'PROJECT' | 'TASK';
 
 export type FieldType =
   | 'TEXT'

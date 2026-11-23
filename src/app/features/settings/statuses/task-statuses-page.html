@@ -1,0 +1,109 @@
+<div class="ts-bar">
+  <label class="fl-inline">Task layout
+    <select class="in" aria-label="Task layout" [value]="layoutId()" (change)="pickLayout($any($event.target).value)">
+      @for (l of layouts() ?? []; track l.id) {
+        <option [value]="l.id" [selected]="l.id === layoutId()">{{ l.name }}{{ l.defaultLayout ? ' (default)' : '' }}</option>
+      }
+    </select>
+  </label>
+  <span class="muted">{{ layout()?.description }}</span>
+</div>
+
+@if (notice(); as n) {
+  <div class="notice" [class.err]="n.kind === 'err'" [attr.role]="n.kind === 'err' ? 'alert' : 'status'" id="ts-notice">
+    <span>{{ n.text }}</span>
+    <button type="button" aria-label="Dismiss" (click)="dismiss()"><py-icon name="x" /></button>
+  </div>
+}
+
+<div class="group" role="list" [attr.aria-label]="'Statuses of ' + (layout()?.name ?? '')">
+  @for (s of items() ?? []; track s.id; let i = $index; let last = $last) {
+    <div
+      class="strow"
+      role="listitem"
+      [attr.data-name]="s.name"
+      [class.over]="overId() === s.id && dragId() !== s.id"
+      [class.dragging]="dragId() === s.id"
+      [attr.draggable]="canManage && editing() !== s.id ? 'true' : null"
+      (dragstart)="dragStart(s, $event)"
+      (dragover)="dragOver(s, $event)"
+      (drop)="drop(s, $event)"
+      (dragend)="dragEnd()"
+    >
+      @if (canManage) {
+        <span class="grip" aria-hidden="true" title="Drag to reorder"><py-icon name="grip" /></span>
+        <span class="so">
+          <button class="ibtn" type="button" [attr.aria-label]="'Move ' + s.name + ' up'" [disabled]="i === 0" (click)="move(s, -1)"><py-icon name="up" /></button>
+          <button class="ibtn" type="button" [attr.aria-label]="'Move ' + s.name + ' down'" [disabled]="last" (click)="move(s, 1)"><py-icon name="down" /></button>
+        </span>
+        <button class="dotbtn" type="button" aria-haspopup="menu" [attr.aria-label]="'Colour of ' + s.name" (click)="openColors(s, $event)">
+          <span class="dot" [style.background]="hex(s)"></span>
+        </button>
+      } @else {
+        <span class="dot" [style.background]="hex(s)"></span>
+      }
+      <div class="sn">
+        @if (editing() === s.id) {
+          <input
+            #ri
+            class="in"
+            data-rename-input
+            [value]="s.name"
+            [attr.maxlength]="maxName"
+            aria-label="Status name"
+            (keydown.enter)="$event.preventDefault(); finishRename(s, ri, true)"
+            (keydown.escape)="$event.stopPropagation(); finishRename(s, ri, false)"
+            (blur)="finishRename(s, ri, true)"
+          />
+        } @else if (canManage) {
+          <button class="namebtn" type="button" title="Click to rename" (click)="startRename(s)">{{ s.name }}</button>
+        } @else {
+          <b>{{ s.name }}</b>
+        }
+        @if (s.defaultStatus) { <span class="chip acc">Default</span> }
+      </div>
+      <div class="sr">
+        @if (canManage) {
+          <select class="in" [attr.aria-label]="'Type of ' + s.name" (change)="setType(s, $any($event.target).value)">
+            <option value="OPEN" [selected]="s.statusType === 'OPEN'">Open</option>
+            <option value="CLOSED" [selected]="s.statusType === 'CLOSED'">Closed</option>
+          </select>
+          @if (!s.defaultStatus && s.statusType === 'OPEN') {
+            <button class="btn ghost" type="button" (click)="makeDefault(s)">Make default</button>
+          }
+          <button class="ibtn" type="button" [attr.aria-label]="'Delete ' + s.name" title="Delete" (click)="remove(s)"><py-icon name="trash" /></button>
+        } @else {
+          <span class="chip">{{ s.statusType === 'OPEN' ? 'Open' : 'Closed' }}</span>
+        }
+      </div>
+    </div>
+  } @empty {
+    <div class="srow"><div class="l muted">{{ items() ? 'No statuses.' : 'Loading statuses…' }}</div></div>
+  }
+  @if (canManage && items()) {
+    <form class="strow add" novalidate (submit)="add($event)">
+      <input class="in" name="name" placeholder="New status name" aria-label="New status name" autocomplete="off" [attr.maxlength]="maxName" [value]="newName()" (input)="newName.set($any($event.target).value)" />
+      <select class="in" aria-label="Type of the new status" (change)="newType.set($any($event.target).value)">
+        <option value="OPEN" [selected]="newType() === 'OPEN'">Open</option>
+        <option value="CLOSED" [selected]="newType() === 'CLOSED'">Closed</option>
+      </select>
+      <button class="btn primary" type="submit"><py-icon name="plus" /> Add status</button>
+    </form>
+  }
+</div>
+<p class="foot">
+  {{ items()?.length ?? 0 }} of {{ max }} statuses. An <b>Open</b> status means the task is still being worked on; moving a
+  task to a <b>Closed</b> status marks it complete (100%). New tasks start in the default status. A status that tasks use can't
+  be deleted. @if (!canManage) { Only Admins can change statuses. }
+</p>
+
+<py-popover [open]="!!colorMenu()" [anchor]="colorMenu()?.anchor ?? null" label="Status colour" (closed)="colorMenu.set(null)">
+  <div class="pop-h">Colour</div>
+  <div class="swatches" role="menu">
+    @for (c of colors; track c[1]) {
+      <button class="swatch" type="button" role="menuitem" [attr.aria-label]="c[0]" [title]="c[0]" [style.background]="c[1]" (click)="pickColor(c[1])">
+        @if (colorMenu()?.status?.color?.toLowerCase() === c[1]) { <py-icon name="check" /> }
+      </button>
+    }
+  </div>
+</py-popover>

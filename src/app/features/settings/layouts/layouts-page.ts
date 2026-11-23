@@ -11,6 +11,7 @@ import { ToastService } from '../../../core/ui/toast.service';
 import { Dialog } from '../../../shared/ui/dialog/dialog';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { Popover } from '../../../shared/ui/popover/popover';
+import { settingsEntity } from '../settings-entity';
 import { plural } from './layout-draft';
 
 const MAX_LAYOUTS = 3;
@@ -37,6 +38,7 @@ export class LayoutsPage implements OnInit {
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  protected readonly entity = settingsEntity(this.route);
   private readonly toast = inject(ToastService);
   protected readonly active = inject(ActivePortalService);
 
@@ -59,7 +61,7 @@ export class LayoutsPage implements OnInit {
   }
 
   private load(): void {
-    this.api.list().subscribe({
+    this.api.list(this.entity.type).subscribe({
       next: (items) => this.items.set(items),
       error: (err: ApiError) => {
         this.items.update((cur) => cur ?? []);
@@ -152,7 +154,7 @@ export class LayoutsPage implements OnInit {
     this.busy.set(true);
     this.dialogError.set(null);
     this.api
-      .create({ entityType: 'PROJECT', name: name.trim(), cloneFromId: start === 'copy' && from ? from : null })
+      .create({ entityType: this.entity.type, name: name.trim(), cloneFromId: start === 'copy' && from ? from : null })
       .subscribe({
         next: (created) => {
           this.busy.set(false);

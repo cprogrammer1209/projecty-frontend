@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { ApiError } from '../../../core/api/api.types';
@@ -8,6 +8,7 @@ import { ActivePortalService } from '../../../core/portal/active-portal.service'
 import { ToastService } from '../../../core/ui/toast.service';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { Dialog } from '../../../shared/ui/dialog/dialog';
+import { settingsEntity } from '../settings-entity';
 import { MAX_FIELDS, PICK_TYPES, typeLabel } from './field-types';
 
 interface Confirm {
@@ -29,6 +30,7 @@ interface Confirm {
 export class FieldsPage implements OnInit {
   private readonly api = inject(CustomFieldApi);
   private readonly toast = inject(ToastService);
+  protected readonly entity = settingsEntity(inject(ActivatedRoute));
   protected readonly active = inject(ActivePortalService);
 
   protected readonly canManage = this.active.can('CUSTOM_FIELDS_MANAGE');
@@ -48,7 +50,7 @@ export class FieldsPage implements OnInit {
   }
 
   protected newLink(): string[] {
-    return ['/p', this.active.portal()?.slug ?? '', 'settings', 'projects', 'fields', 'new'];
+    return ['/p', this.active.portal()?.slug ?? '', 'settings', this.entity.path, 'fields', 'new'];
   }
 
   protected editLink(f: CustomField): string[] {
@@ -71,7 +73,7 @@ export class FieldsPage implements OnInit {
     const j = i + delta;
     if (i < 0 || j < 0 || j >= list.length) return;
     [list[i], list[j]] = [list[j], list[i]];
-    this.run(this.api.reorder('PROJECT', list.map((x) => x.id)));
+    this.run(this.api.reorder(this.entity.type, list.map((x) => x.id)));
   }
 
   protected activate(f: CustomField): void {
@@ -125,7 +127,7 @@ export class FieldsPage implements OnInit {
   }
 
   private load(): void {
-    (this.canManage ? this.api.listAll() : this.api.list()).subscribe({
+    (this.canManage ? this.api.listAll(this.entity.type) : this.api.list(this.entity.type)).subscribe({
       next: (list) => {
         this.items.set(list);
         this.busy.set(false);

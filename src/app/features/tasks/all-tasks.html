@@ -1,0 +1,16 @@
+<div class="page-title">
+  <div>
+    <h1>Tasks</h1>
+    <p>{{ current() === 'mine' ? 'Tasks assigned to you, across all projects.' : 'Every task in the projects you can see.' }}</p>
+  </div>
+</div>
+<nav class="ptabs" aria-label="Task views">
+  <a [routerLink]="[]" [queryParams]="tabLink('mine')" id="tab-mine" [class.active]="current() === 'mine'" [attr.aria-current]="current() === 'mine' ? 'page' : null" replaceUrl>My Tasks</a>
+  <a [routerLink]="[]" [queryParams]="tabLink('all')" id="tab-all" [class.active]="current() === 'all'" [attr.aria-current]="current() === 'all' ? 'page' : null" replaceUrl>All Tasks</a>
+</nav>
+@if (sources) {
+  @switch (current()) {
+    @case ('mine') { <py-task-view [source]="sources.mine" [state]="states.mine" /> }
+    @case ('all') { <py-task-view [source]="sources.all" [state]="states.all" /> }
+  }
+}

@@ -1,0 +1,53 @@
+<div class="tv" [class.is-board]="state().view() === 'board'">
+  <py-tv-toolbar><ng-content select="[tvExtra]" /></py-tv-toolbar>
+  @if (store.notice(); as message) {
+    <div class="py-alert py-alert--ok" role="status" id="notice"><py-icon name="check" /><span>{{ message }}</span></div>
+  }
+  <div class="tv-body" id="tv-body">
+    @if (store.error(); as message) {
+      <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+    } @else if (!store.data()) {
+      <p class="py-caption tv-loading">Loading tasks…</p>
+    } @else if (!store.visible().length) {
+      <div class="empty" id="empty">
+        <b>{{ store.filtered() ? 'No tasks match the filters.' : source().emptyHint }}</b>
+        @if (store.filtered()) { <button class="tb" type="button" data-clearall (click)="store.clearAllFilters()">Clear filters</button> }
+      </div>
+    } @else if (state().view() === 'board') {
+      <py-tv-board />
+    } @else {
+      <py-tv-list />
+    }
+  </div>
+  <py-tv-bulk />
+  <div class="hints">
+    @if (state().view() === 'board') {
+      <span>Drag cards between columns to change them</span>
+    } @else {
+      <span><span class="kbd">J</span><span class="kbd">K</span> move</span><span><span class="kbd">Space</span> peek</span><span><span class="kbd">Enter</span> open</span>
+      <span><span class="kbd">S</span> status</span><span><span class="kbd">P</span> priority</span><span><span class="kbd">A</span> owner</span><span><span class="kbd">X</span> select</span>
+    }
+    <span><span class="kbd">C</span> new task</span><span><span class="kbd">Ctrl</span><span class="kbd">K</span> commands</span>
+  </div>
+</div>
+
+<py-tv-peek />
+@if (store.toolbarMenu(); as m) { <py-tv-display-menu [anchor]="m.anchor" (closed)="store.toolbarMenu.set(null)" /> }
+@if (store.menu(); as m) { <py-tv-picker [spec]="m" (closed)="store.menu.set(null)" /> }
+@if (store.newTask(); as init) { <py-tv-new-task [init]="init" (closed)="store.newTask.set(null)" /> }
+@if (store.palette()) {
+  <py-tv-palette [commands]="commands()" [tasks]="store.data()?.tasks ?? []" (openTask)="store.openPeek($event.id)" (closed)="store.palette.set(false)" />
+}
+<py-dialog [open]="!!store.confirm()" label="Confirm" (closed)="resolve(false)">
+  @if (store.confirm(); as c) {
+    <div class="tk-dlg">
+      <h2>{{ c.title }}</h2>
+      <p class="lead">{{ c.lead }}</p>
+      <div class="tk-dlg-actions">
+        <button class="py-btn py-btn--secondary" type="button" (click)="resolve(false)">Cancel</button>
+        <button class="py-btn py-btn--primary" type="button" id="tv-confirm" (click)="resolve(true)">{{ c.label }}</button>
+      </div>
+    </div>
+  }
+</py-dialog>
+@if (store.toastText(); as text) { <div id="tv-toast" class="show" role="status">{{ text }}</div> }

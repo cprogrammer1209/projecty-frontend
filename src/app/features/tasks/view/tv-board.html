@@ -1,0 +1,19 @@
+<div class="board" id="tv-board" (dragstart)="start($event)" (dragend)="end()">
+  @for (g of store.groups(); track g.id) {
+    @let key = store.groupKey();
+    <section class="col" [class.over]="over() === g.id" [attr.data-col]="g.id" [attr.aria-label]="g.label" (dragover)="dragOver($event, g)" (drop)="drop($event, g)">
+      <h3>
+        @if (store.groupIcon(g, key); as ic) { <py-tv-glyph [icon]="ic" [size]="key === 'owner' ? 16 : 14" /> }
+        <span class="gname">{{ g.label }}</span><span class="cnt gcount">{{ g.items.length }}</span><span class="sp"></span>
+        @if (store.canCreateAny() && !g.list?.archived) {
+          <button type="button" class="ibtn" [attr.data-qa]="g.id" [attr.aria-label]="'Add a task to ' + g.label" title="Add a task" (click)="store.openQuickAdd(g.id)"><py-tv-icon n="plus" /></button>
+        }
+      </h3>
+      <div class="cards">
+        @if (store.quickAdd()?.gid === g.id) { <form [tvQuickAdd]="g.id" [attr.data-add]="g.id"></form> }
+        @for (t of g.items; track t.id) { <article [tvCard]="t"></article> }
+        @if (!g.items.length) { <div class="colempty">No tasks</div> }
+      </div>
+    </section>
+  }
+</div>

@@ -1,0 +1,25 @@
+<div class="tv-bar" role="toolbar" aria-label="Task view">
+  <button #fb class="tb" type="button" id="filter-btn" aria-haspopup="true" (click)="openFilter(fb)"><py-tv-icon n="filter" />Filter</button>
+  <div class="tsearch">
+    <py-tv-icon n="search" [size]="13" />
+    <input type="search" id="f-q" placeholder="Search tasks" aria-label="Search tasks" autocomplete="off" [value]="store.state.filter().q" (input)="store.setQuery($any($event.target).value)" />
+  </div>
+  <span class="sp"></span>
+  <ng-content />
+  <button #db class="tb" type="button" id="display-btn" aria-haspopup="true" (click)="openDisplay(db)"><py-tv-icon n="disp" />Display</button>
+  @if (store.canCreateAny()) {
+    <button class="tb pri" type="button" id="new-task" (click)="store.openNew()"><py-tv-icon n="plus" />New task</button>
+  }
+</div>
+@if (chips().length) {
+  <div class="fbar" id="tv-chips">
+    @for (c of chips(); track c.key) {
+      <span class="fc" [attr.data-chip]="c.key">
+        <span class="m">{{ c.label }}</span> is <b>{{ c.text }}</b>
+        <button type="button" class="ibtn" [attr.data-clearf]="c.key" [attr.aria-label]="'Remove ' + c.label + ' filter'" (click)="store.clearFilter(c.key)"><py-tv-icon n="x" [size]="10" /></button>
+      </span>
+    }
+    <button #af class="fc add" type="button" (click)="openFilter(af)"><py-tv-icon n="plus" [size]="11" />Filter</button>
+    <button class="fc add" type="button" id="f-clear" (click)="store.clearAllFilters()">Clear filters</button>
+  </div>
+}

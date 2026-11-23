@@ -42,7 +42,7 @@
               @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
             </select>
           </py-field>
-          <py-field label="Description" for="cf-desc" [error]="serverErrors().description ?? null" hint="Optional. Shown under the field on the project form.">
+          <py-field label="Description" for="cf-desc" [error]="serverErrors().description ?? null" hint="Optional. Shown under the field on the {{ entity.noun }} form.">
             <textarea id="cf-desc" class="py-textarea" rows="2" formControlName="description" [attr.aria-invalid]="serverErrors().description ? 'true' : null"></textarea>
           </py-field>
         </section>
@@ -51,7 +51,7 @@
           <section class="group ff-card" aria-labelledby="ff-choices">
             <h2 id="ff-choices">Choices</h2>
             <p class="ff-sub">
-              Projects already using a choice keep it after you deactivate it. Choices are never deleted.
+              {{ entity.title }} already using a choice keep it after you deactivate it. Choices are never deleted.
               {{ type() === 'PICKLIST' ? 'Mark one choice as the default.' : 'Mark any number of choices as defaults.' }}
             </p>
             @if (optionsError(); as message) {
@@ -63,7 +63,7 @@
                   <input type="text" [attr.data-choice]="o.key" [value]="o.label" [attr.placeholder]="'Choice ' + (i + 1)" [attr.aria-label]="'Choice ' + (i + 1)"
                          [attr.maxlength]="maxChoice" [attr.aria-invalid]="optionsError() && !o.label.trim() && o.active ? 'true' : null"
                          (input)="setLabel(o, $any($event.target).value)" />
-                  <label class="ff-def" [title]="type() === 'PICKLIST' ? 'The choice picked for a new project' : 'Picked for a new project'">
+                  <label class="ff-def" [title]="type() === 'PICKLIST' ? 'The choice picked for a new ' + entity.noun : 'Picked for a new ' + entity.noun">
                     <input type="checkbox" [checked]="o.defaultOption" [disabled]="!o.active" (change)="toggleDefault(o, $any($event.target).checked)" />
                     <span>Default</span>
                   </label>
@@ -85,7 +85,7 @@
           <h2>Rules</h2>
           <label class="cf-rule">
             <input type="checkbox" formControlName="mandatory" />
-            <span><strong>Required</strong><small>A project can't be saved without an answer.</small></span>
+            <span><strong>Required</strong><small>A {{ entity.noun }} can't be saved without an answer.</small></span>
           </label>
           <label class="cf-rule" [class.off]="!!field() || !canUnique()">
             <input type="checkbox" formControlName="unique" (change)="onUniqueChange()" [attr.aria-invalid]="serverErrors().unique ? 'true' : null" [attr.aria-disabled]="!canUnique()" [attr.disabled]="!canUnique() ? '' : null" />
@@ -94,7 +94,7 @@
               <small>
                 @if (!canUnique()) { Only text, number, decimal and date fields can be unique. }
                 @else if (field()) { Fixed after creation. }
-                @else { No two projects can have the same answer. }
+                @else { No two {{ entity.nouns }} can have the same answer. }
               </small>
             </span>
           </label>
@@ -149,13 +149,13 @@
 
       <aside class="ff-side">
         <section class="group ff-card ff-preview">
-          <h2>On the project form</h2>
+          <h2>On the {{ entity.noun }} form</h2>
           @if (hasDefaultControl()) {
             <py-custom-value [field]="draft()" [(value)]="defaultValue" />
           } @else {
             <py-custom-value [field]="draft()" [(value)]="previewValue" [people]="people()" />
           }
-          <p class="ff-sub">{{ field() ? 'Changes show on the project form once saved.' : 'This is how people will fill it in.' }}</p>
+          <p class="ff-sub">{{ field() ? 'Changes show on the {{ entity.noun }} form once saved.' : 'This is how people will fill it in.' }}</p>
         </section>
       </aside>
     </div>

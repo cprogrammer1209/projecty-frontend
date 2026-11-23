@@ -81,7 +81,7 @@
     </table>
   </div>
 </div>
-<p class="fl-note">Fields are shown on the project form in this order. A deactivated field is hidden but keeps its answers, and can be activated again. Deleting removes the answers for good.</p>
+<p class="fl-note">Fields are shown on the {{ entity.noun }} form in this order. A deactivated field is hidden but keeps its answers, and can be activated again. Deleting removes the answers for good.</p>
 
 <py-dialog [open]="!!confirm()" [label]="confirm()?.kind === 'delete' ? 'Delete field' : 'Deactivate field'" (closed)="cancel()">
   @if (confirm(); as c) {
@@ -89,13 +89,13 @@
       <h2>{{ c.kind === 'delete' ? 'Delete ' : 'Deactivate ' }}{{ c.field.label }}?</h2>
       @if (c.kind === 'delete') {
         <p>
-          @if (c.count === null) { We couldn't check how many projects have an answer. }
-          @else if (c.count === 0) { No project has an answer. }
-          @else { {{ c.count }} project{{ c.count === 1 ? ' has' : 's have' }} an answer, and {{ c.count === 1 ? 'it' : 'they' }} will be removed. }
+          @if (c.count === null) { We couldn't check how many {{ entity.nouns }} have an answer. }
+          @else if (c.count === 0) { No {{ entity.noun }} has an answer. }
+          @else { {{ c.count }} {{ entity.noun }}{{ c.count === 1 ? ' has' : 's have' }} an answer, and {{ c.count === 1 ? 'it' : 'they' }} will be removed. }
           This can't be undone. The key <span class="mono">{{ c.field.apiName }}</span> is retired, so a new field with the same name gets a new key. To keep the answers, deactivate it instead.
         </p>
       } @else {
-        <p>It disappears from project forms and overviews. Its answers are kept and come back if you activate it again.</p>
+        <p>It disappears from {{ entity.noun }} forms and overviews. Its answers are kept and come back if you activate it again.</p>
       }
       @if (c.error) { <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ c.error }}</span></div> }
       <div class="fl-dlg-actions">

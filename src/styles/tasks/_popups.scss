@@ -1,0 +1,62 @@
+/* Floating pieces of the task view: menus, the New task modal, the command palette, the toast, the peek panel. */
+.tv-pop { position: fixed; z-index: 90; min-width: 210px; max-width: 320px; background: var(--py-surface-0); border: 1px solid var(--py-border); border-radius: 9px; box-shadow: var(--py-shadow-lg); padding: 4px; font-size: 13px; color: var(--py-ink); }
+.pop-t { padding: 6px 8px 2px; font-size: 11.5px; color: var(--py-ink-muted); }
+.pop-s { width: 100%; height: 30px; border: 0; border-bottom: 1px solid var(--py-border); background: none; padding: 0 8px; outline: 0; margin-bottom: 4px; color: var(--py-ink); font: 400 13px/20px var(--py-font-ui); }
+.pop-l { max-height: 300px; overflow: auto; }
+.pop-i, .tv-pop .di { display: flex; align-items: center; gap: 9px; width: 100%; border: 0; background: none; padding: 0 8px; height: 28px; border-radius: 5px; text-align: left; color: var(--py-ink); font: 400 13px/1 var(--py-font-ui); cursor: pointer; }
+.pop-i:hover, .tv-pop .di:hover { background: var(--tv-hover); }
+.pop-i.hi { background: var(--tv-sel); }
+.tv-pop .di.on { background: var(--tv-sel); }
+.pop-i .pi-l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pop-tick { margin-left: auto; color: var(--py-ink-muted); }
+.pop-hint { margin-left: auto; color: var(--py-ink-muted); font-size: 11px; }
+.pop-ck { width: 14px; height: 14px; border: 1.5px solid var(--py-border-control); border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; color: #fff; flex: none; }
+.pop-i.on .pop-ck { background: var(--py-brand); border-color: var(--py-brand); }
+.pop-e { padding: 8px; color: var(--py-ink-muted); }
+.pop-f { padding: 6px 4px 2px; border-top: 1px solid var(--py-border); margin-top: 4px; }
+.pop-date { width: 100%; height: 28px; border: 1px solid var(--py-border-control); border-radius: 6px; background: var(--py-surface-0); color: var(--py-ink); padding: 0 6px; font: 400 12px var(--py-font-ui); }
+.tv-pop .seg { display: flex; gap: 4px; padding: 6px 8px; }
+.tv-pop .seg button { flex: 1; height: 28px; border: 1px solid var(--py-border); background: var(--py-surface-0); border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--py-ink); cursor: pointer; font: 500 12.5px/1 var(--py-font-ui); }
+.tv-pop .seg button.on { background: var(--tv-sel); border-color: transparent; }
+.tv-pop .di input { margin: 0; accent-color: var(--py-brand); }
+.tv-pop.lmenu { width: 460px; max-width: 94vw; max-height: 70vh; overflow: auto; }
+.lrow { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; }
+.lrow:hover { background: var(--tv-hover); }
+.lrow.archived { opacity: .7; }
+.lrow .ln { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 500; }
+.lrow .ln small { color: var(--py-ink-muted); font-weight: 400; font-size: 11.5px; width: 100%; }
+.lrow .chip { font-size: 11px; padding: 0 6px; border: 1px solid var(--py-border); border-radius: 99px; background: none; color: var(--py-ink-muted); font-weight: 400; }
+.lrow .lacts { display: inline-flex; align-items: center; gap: 2px; }
+.tv-pop .py-btn.sm { height: 26px; padding: 0 8px; font-size: 12px; }
+
+.tv-scrim { position: fixed; inset: 0; z-index: 80; background: rgba(12, 16, 24, .3); display: flex; align-items: flex-start; justify-content: center; padding: 10vh 12px 0; }
+.tv-modal { width: min(640px, 94vw); background: var(--py-surface-0); border: 1px solid var(--py-border); border-radius: 12px; box-shadow: var(--py-shadow-lg); overflow: hidden; }
+.tv-modal .ph { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--py-border); color: var(--py-ink-muted); }
+.tv-modal .ph b { color: var(--py-ink); font-weight: 500; }
+.tv-modal .ph .py-select { width: auto; height: 28px; font-size: 12.5px; }
+.tv-modal .pbody { padding: 16px 20px 12px; }
+.ttl-in { width: 100%; border: 0; background: none; font: 600 18px/1.3 var(--py-font-ui); letter-spacing: -.02em; padding: 4px 0; outline: 0; color: var(--py-ink); }
+.desc { width: 100%; border: 0; background: none; resize: none; min-height: 64px; padding: 0; margin: 4px 0 10px; line-height: 1.6; color: var(--py-ink); outline: 0; font: 400 13px/1.6 var(--py-font-ui); }
+.props { display: flex; flex-wrap: wrap; gap: 6px; }
+.pp { height: 26px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--py-border); background: var(--py-surface-0); border-radius: 6px; padding: 0 9px; color: var(--py-ink); font: 450 12.5px/1 var(--py-font-ui); cursor: pointer; }
+.pp:hover { background: var(--tv-hover); }
+.pp.mut { color: var(--py-ink-muted); }
+.tv-modal .pf { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--py-border); }
+.tv-modal .pf .more { display: flex; align-items: center; gap: 6px; margin-right: auto; font-size: 12.5px; color: var(--py-ink-muted); }
+.tv-modal .pf .more input { accent-color: var(--py-brand); }
+.tv-pal { width: min(560px, 94vw); background: var(--py-surface-0); border: 1px solid var(--py-border); border-radius: 12px; box-shadow: var(--py-shadow-lg); overflow: hidden; }
+.tv-pal input { width: 100%; height: 46px; border: 0; border-bottom: 1px solid var(--py-border); background: none; padding: 0 16px; font: 400 14px var(--py-font-ui); outline: 0; color: var(--py-ink); }
+.tv-pal .res { max-height: 320px; overflow: auto; padding: 6px; }
+.tv-pal .res button { display: flex; align-items: center; gap: 10px; width: 100%; height: 32px; border: 0; background: none; border-radius: 6px; padding: 0 10px; text-align: left; color: var(--py-ink); font: 400 13px var(--py-font-ui); cursor: pointer; }
+.tv-pal .res button.hi, .tv-pal .res button:hover { background: var(--tv-sel); }
+.tv-pal .gl { padding: 8px 10px 2px; font-size: 11.5px; color: var(--py-ink-muted); }
+#tv-toast { position: fixed; left: 50%; bottom: 64px; transform: translate(-50%, 20px); background: var(--py-ink); color: var(--py-surface-0); padding: 8px 14px; border-radius: 8px; opacity: 0; pointer-events: none; transition: .2s; z-index: 120; max-width: 90vw; font-size: 13px; }
+#tv-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* Peek side panel */
+.tv-peek-scrim { position: fixed; inset: 0; z-index: 70; background: rgba(12, 16, 24, .18); display: flex; justify-content: flex-end; }
+.tv-peek { width: min(560px, 100vw); height: 100%; background: var(--py-surface-0); border-left: 1px solid var(--py-border); box-shadow: var(--py-shadow-lg); display: flex; flex-direction: column; }
+.pk-h { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--py-border); flex: none; }
+.pk-h .mut { color: var(--py-ink-muted); font-size: 12px; }
+.pk-body { overflow: auto; flex: 1; }
+@media (max-width: 900px) { .tv-pop.lmenu { width: 94vw; } .tv-peek { width: 100vw; } .tv-modal .props { gap: 4px; } }

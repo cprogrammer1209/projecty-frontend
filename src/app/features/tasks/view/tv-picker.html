@@ -1,0 +1,23 @@
+<py-tv-popup [anchor]="spec().anchor" [alignEnd]="!!spec().alignEnd" (closed)="closed.emit()">
+  @if (spec().title) { <div class="pop-t">{{ spec().title }}</div> }
+  @if (spec().search) {
+    <input #s class="pop-s" [placeholder]="spec().search" [attr.aria-label]="spec().search" autocomplete="off" [value]="query()" (input)="onSearch($any($event.target).value)" />
+  }
+  <div class="pop-l">
+    @for (i of visible(); track i.id; let n = $index) {
+      <button type="button" class="pop-i" [class.on]="i.on" [class.hi]="n === hi()" [attr.data-id]="i.id" (click)="choose(i)">
+        @if (spec().multi) { <span class="pop-ck">{{ i.on ? '✓' : '' }}</span> }
+        @if (i.icon; as ic) { <py-tv-glyph [icon]="ic" [size]="ic.k === 'person' ? 18 : 14" /> }
+        @if (i.tag) { <span class="tag">{{ i.label }}</span> } @else { <span class="pi-l">{{ i.label }}</span> }
+        @if (i.hint) { <span class="pop-hint">{{ i.hint }}</span> }
+        @if (spec().num && n < 9) { <span class="kbd num">{{ n + 1 }}</span> }
+        @if (!spec().multi && i.on) { <span class="pop-tick">✓</span> }
+      </button>
+    } @empty {
+      <div class="pop-e">No matches</div>
+    }
+  </div>
+  @if (spec().onDate) {
+    <div class="pop-f"><input type="date" class="pop-date" aria-label="Pick a date" (change)="date($any($event.target).value)" /></div>
+  }
+</py-tv-popup>

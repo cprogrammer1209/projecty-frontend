@@ -57,11 +57,14 @@
     </div>
   }
 
+  <py-project-tabs [projectId]="d.project.id" current="overview" [count]="taskStats()?.total ?? null" />
+
   <div class="stats">
-    <div class="stat"><div class="stat-label">Progress</div><div class="stat-value">{{ d.project.progress }}%</div><div class="stat-foot">Closed tasks ÷ all tasks</div></div>
-    <div class="stat"><div class="stat-label">Open tasks</div><div class="stat-value">—</div><div class="stat-foot">Tasks arrive next</div></div>
-    <div class="stat"><div class="stat-label">Closed tasks</div><div class="stat-value">—</div><div class="stat-foot">Tasks arrive next</div></div>
-    <div class="stat"><div class="stat-label">Overdue</div><div class="stat-value">—</div><div class="stat-foot">Needs tasks with dates</div></div>
+    @let st = taskStats();
+    <div class="stat"><div class="stat-label">Progress</div><div class="stat-value">{{ st && st.total ? progressOf(st) : d.project.progress }}%</div><div class="stat-foot">Closed tasks ÷ all tasks</div></div>
+    <a class="stat stat-link" id="stat-open" [routerLink]="['/p', active.portal()?.slug, 'projects', d.project.id, 'tasks']"><div class="stat-label">Open tasks</div><div class="stat-value">{{ st ? st.open : '—' }}</div><div class="stat-foot">See them in Tasks</div></a>
+    <a class="stat stat-link" id="stat-closed" [routerLink]="['/p', active.portal()?.slug, 'projects', d.project.id, 'tasks']"><div class="stat-label">Closed tasks</div><div class="stat-value">{{ st ? st.closed : '—' }}</div><div class="stat-foot">See them in Tasks</div></a>
+    <a class="stat stat-link" id="stat-overdue" [routerLink]="['/p', active.portal()?.slug, 'projects', d.project.id, 'tasks']"><div class="stat-label">Overdue</div><div class="stat-value">{{ st ? st.overdue : '—' }}</div><div class="stat-foot">Open tasks past their due date</div></a>
   </div>
 
   <div class="ov-grid">

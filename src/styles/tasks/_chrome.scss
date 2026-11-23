@@ -1,0 +1,73 @@
+/* Page chrome shared with the projects pages, small pieces (chips, tags, avatars), dialogs and the project-settings bits. */
+.tasks-page { --tv-hover: color-mix(in srgb, var(--py-ink) 5%, transparent); --tv-sel: color-mix(in srgb, var(--py-brand) 12%, transparent); --tv-grp: var(--py-surface-1); display: flex; flex-direction: column; gap: 16px; }
+py-task-view, py-tv-list, py-tv-board { display: block; }
+.tv-pop, .tv-scrim, .tv-peek-scrim, .tv-modal, #tv-toast { --tv-hover: color-mix(in srgb, var(--py-ink) 6%, transparent); --tv-sel: color-mix(in srgb, var(--py-brand) 14%, transparent); --tv-grp: var(--py-surface-1); }
+.tasks-page .page-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.tasks-page .page-title h1 { font: 600 24px/1.2 var(--py-font-ui); letter-spacing: -.03em; margin: 0; }
+.tasks-page .page-title p { margin: 6px 0 0; color: var(--py-ink-muted); font-size: 13px; max-width: 70ch; }
+.tasks-page .py-btn.danger { color: var(--py-status-blocked); }
+.tasks-page .py-btn.sm { height: 26px; padding: 0 8px; font-size: 12px; }
+.tasks-page a.py-btn:hover { text-decoration: none; }
+.tasks-page .back { display: inline-flex; align-items: center; gap: 6px; color: var(--py-ink-muted); font-size: 13px; width: fit-content; }
+.tasks-page .back:hover { color: var(--py-ink); text-decoration: none; }
+.tasks-page .panel { background: var(--py-surface-0); border: 1px solid var(--py-border); border-radius: 10px; }
+.tasks-page .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; }
+.tasks-page .panel-head h2 { font: 600 15px/22px var(--py-font-ui); margin: 0; }
+.tasks-page .panel-head p { margin: 2px 0 0; font-size: 12px; color: var(--py-ink-muted); }
+.tasks-page .table-wrap { overflow-x: auto; border-top: 1px solid var(--py-border); }
+.tasks-page table { width: 100%; border-collapse: collapse; min-width: 560px; font-size: 13px; }
+.tasks-page th { text-align: left; font: 600 11px/16px var(--py-font-ui); text-transform: uppercase; letter-spacing: .05em; color: var(--py-ink-muted); background: var(--py-surface-1); padding: 9px 14px; }
+.tasks-page td { padding: 10px 14px; border-top: 1px solid var(--py-border); vertical-align: middle; }
+.tasks-page td.empty { text-align: center; color: var(--py-ink-muted); padding: 22px; }
+.tasks-page .actions { text-align: right; }
+.tasks-page .muted { color: var(--py-ink-muted); }
+.tasks-page .not-found { padding: 40px 18px; text-align: center; color: var(--py-ink-muted); line-height: 1.7; }
+.tasks-page .not-found b { color: var(--py-ink); }
+.tasks-page .key { font: 500 11px/1 var(--py-font-mono); padding: 5px 7px; border-radius: var(--py-radius-sm); background: var(--py-surface-2); color: var(--py-ink); letter-spacing: .02em; flex-shrink: 0; }
+.tasks-page .chip, .tv-pop .chip { padding: 2px 7px; border-radius: 99px; background: var(--py-brand-subtle); color: var(--py-brand); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.tasks-page .chip-vis { display: inline-flex; align-items: center; gap: 5px; font: 500 12px/16px var(--py-font-ui); color: var(--py-ink-muted); }
+.tasks-page .chip-vis py-icon { width: 14px; height: 14px; }
+.tasks-page .ov-key { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.tasks-page .mono { font-family: var(--py-font-mono); font-size: 12px; color: var(--py-ink-muted); }
+.tasks-page .cf-sub { display: block; color: var(--py-ink-muted); font-size: 12px; }
+.tasks-page .icon-x, .tv-pop .icon-x { border: 0; background: none; color: var(--py-ink-muted); width: 24px; height: 24px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+.tasks-page .icon-x:hover:not(:disabled), .tv-pop .icon-x:hover:not(:disabled) { background: var(--tv-hover); color: var(--py-ink); }
+.tasks-page .icon-x:disabled, .tv-pop .icon-x:disabled { opacity: .3; cursor: default; }
+
+/* Project tab strip, status chip, tags, avatars, kbd */
+.ptabs { display: flex; gap: 4px; border-bottom: 1px solid var(--py-border); margin: 4px 0 2px; }
+.ptabs a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; color: var(--py-ink-muted); font: 500 13px/18px var(--py-font-ui); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.ptabs a:hover { color: var(--py-ink); text-decoration: none; }
+.ptabs a.active { color: var(--py-ink); border-bottom-color: var(--py-brand); }
+.st-chip { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border: 1px solid var(--py-border); border-radius: 99px; background: var(--py-surface-0); font: 500 12px/16px var(--py-font-ui); color: var(--py-ink); white-space: nowrap; }
+.st-chip i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--c); box-sizing: border-box; flex-shrink: 0; }
+.st-chip.closed i { background: var(--c); }
+.tasks-page .tag, .tv-pop .tag { display: inline-flex; align-items: center; gap: 4px; height: 18px; padding: 0 7px; border-radius: 9px; border: 1px solid var(--py-border); color: var(--py-ink-muted); font: 500 11px/16px var(--py-font-ui); flex: none; }
+.tasks-page .tag.lg { height: 24px; padding: 0 4px 0 9px; font-size: 12px; color: var(--py-ink); border-radius: 12px; }
+.tasks-page .tag-x { border: 0; background: none; color: var(--py-ink-muted); cursor: pointer; width: 18px; height: 18px; border-radius: 4px; font-size: 10px; }
+.tasks-page .tag-x:hover { background: var(--py-border); color: var(--py-status-blocked); }
+.avs { display: inline-flex; }
+.avs .tv-av + .tv-av { margin-left: -5px; box-shadow: 0 0 0 2px var(--py-surface-0); }
+.tv-av { display: inline-grid; place-items: center; border-radius: 50%; color: #fff; font-weight: 600; flex: none; line-height: 1; }
+.tv-av.none { background: transparent; border: 1.5px dashed var(--py-border-control); }
+.tv-av.more { background: var(--py-surface-2); color: var(--py-ink-muted); }
+.tasks-page .subc { display: inline-flex; align-items: center; gap: 3px; height: 18px; padding: 0 6px; border: 1px solid var(--py-border); border-radius: 9px; color: var(--py-ink-muted); font: 500 11px/16px var(--py-font-ui); flex: none; }
+.kbd { font: 500 10.5px/1 var(--py-font-ui); border: 1px solid var(--py-border-control); border-bottom-width: 2px; border-radius: 4px; padding: 2px 5px; color: var(--py-ink-muted); background: var(--py-surface-0); display: inline-block; min-width: 18px; text-align: center; }
+.kbd.num { margin-left: auto; border-width: 1px; }
+.tag-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--py-brand); }
+
+/* Dialogs (inside py-dialog) */
+.tk-dlg { display: flex; flex-direction: column; gap: 14px; }
+.tk-dlg h2 { font: 600 17px/24px var(--py-font-ui); margin: 0; }
+.tk-dlg .lead { margin: -8px 0 0; color: var(--py-ink-muted); font-size: 13px; }
+.tk-dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+/* Project settings: task layout and its statuses; project overview stat tiles that link to Tasks */
+.ps-statuses { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid var(--py-border); border-radius: var(--py-radius-md); background: var(--py-surface-1); }
+.stat-link { color: inherit; text-decoration: none; display: block; }
+.stat-link:hover { text-decoration: none; border-color: var(--py-brand); }
+.ps-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+/* The popover floats (fixed) instead of hanging off the cell, so the shared popover styles lose their offsets. */
+.pop.inpop { position: static; min-width: 0; max-width: none; padding: 0; border: 0; box-shadow: none; background: none; }
+.pop.inpop.cal { width: 240px; padding: 2px; }
+.inl-wrap .py-field__error { margin-top: 4px; }

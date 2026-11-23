@@ -37,9 +37,9 @@
           <py-icon name="home" /><span class="nav-label">Home</span>
         </a>
         @for (item of comingLater; track item.label) {
-          @if (item.route) {
+          @if (item.route && (!item.permission || active.can(item.permission))) {
             <a [routerLink]="['/p', active.portal()?.slug, item.route]" routerLinkActive="active"><py-icon [name]="item.icon" /><span class="nav-label">{{ item.label }}</span></a>
-          } @else {
+          } @else if (!item.route) {
             <button type="button" disabled title="Coming in a later step"><py-icon [name]="item.icon" /><span class="nav-label">{{ item.label }}</span></button>
           }
         }

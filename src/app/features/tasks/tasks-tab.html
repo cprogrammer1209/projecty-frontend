@@ -1,0 +1,122 @@
+@if (missing()) {
+  <section class="panel">
+    <div class="not-found">
+      <b>Project not found</b><br />It doesn't exist, was moved to the trash, or you can't see it.<br /><br />
+      <a class="py-btn py-btn--secondary" [routerLink]="['/p', active.portal()?.slug, 'projects']">Back to projects</a>
+    </div>
+  </section>
+} @else if (!ready()) {
+  @if (error(); as message) { <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div> }
+  @else { <p class="py-caption">Loading tasks…</p> }
+} @else {
+  <a class="back" [routerLink]="['/p', active.portal()?.slug, 'projects']"><py-icon name="arrow-left" />All projects</a>
+  <div class="page-title">
+    <div>
+      <div class="ov-key">
+        @if (project(); as p) { <span class="key">{{ p.project.key }}</span> }
+      </div>
+      <h1>{{ project()?.project?.name ?? 'Tasks' }}</h1>
+    </div>
+  </div>
+  <py-project-tabs [projectId]="id()" current="tasks" [count]="total()" />
+
+  @if (error(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+
+  @if (trashView()) {
+    @if (notice(); as message) {
+      <div class="py-alert py-alert--ok" role="status" id="notice"><py-icon name="check" /><span>{{ message }}</span></div>
+    }
+    <section class="panel" id="trash">
+      <div class="panel-head">
+        <div><h2>Trash</h2><p>Deleted tasks, with their subtasks. Restore brings everything back.</p></div>
+        <button class="py-btn py-btn--secondary" type="button" id="toggle-trash" (click)="toggleTrash()">Back to tasks</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Task</th><th>Deleted</th><th></th></tr></thead>
+          <tbody>
+            @if (trash(); as items) {
+              @for (t of items; track t.id) {
+                <tr data-trash-row>
+                  <td><span class="mono">{{ t.key }}</span> {{ t.title }}@if (t.subtaskCount) { <small class="cf-sub">{{ t.subtaskCount }} subtask{{ t.subtaskCount === 1 ? '' : 's' }}</small> }</td>
+                  <td>{{ t.deletedAt | pyDate: dateTimePattern() }}</td>
+                  <td class="actions"><button class="py-btn py-btn--secondary" type="button" [attr.data-restore]="t.id" (click)="restore(t)">Restore</button></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="3" class="empty">The trash is empty.</td></tr>
+              }
+            } @else {
+              <tr><td colspan="3" class="empty">Loading…</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  } @else {
+    <py-task-view [source]="source" [state]="state" [notice]="notice()">
+      <ng-container tvExtra>
+        @if (canEdit() || canCreate()) {
+          <button #lb class="tb" type="button" id="lists-menu" aria-haspopup="true" (click)="toggleListsMenu(lb)"><py-tv-icon n="stack" />Lists</button>
+        }
+        @if (canDelete()) {
+          <button class="tb" type="button" id="toggle-trash" [attr.aria-pressed]="false" (click)="toggleTrash()"><py-tv-icon n="trash" />Trash</button>
+        }
+      </ng-container>
+    </py-task-view>
+    @if (listsMenu(); as anchor) {
+      <py-tv-popup [anchor]="anchor" cls="lmenu" (closed)="listsMenu.set(null)">
+        <div class="pop-t">Task lists</div>
+        @for (l of lists(); track l.id) {
+          <div class="lrow" [class.archived]="l.archived" [attr.data-lid]="l.id">
+            <span class="ln">
+              {{ l.name }}
+              @if (l.visibility === 'EXTERNAL') { <span class="chip">External</span> }
+              @if (l.archived) { <span class="chip">Archived</span> }
+              <small>{{ l.taskCount - l.completedCount }} open · {{ l.taskCount }} total</small>
+            </span>
+            @if (canEdit()) {
+              <span class="lacts">
+                <button class="icon-x" type="button" [disabled]="isFirst(l)" [attr.data-list-up]="l.id" [attr.aria-label]="'Move ' + l.name + ' up'" title="Move up" (click)="moveList(l, -1)">↑</button>
+                <button class="icon-x" type="button" [disabled]="isLast(l)" [attr.data-list-down]="l.id" [attr.aria-label]="'Move ' + l.name + ' down'" title="Move down" (click)="moveList(l, 1)">↓</button>
+                <button class="py-btn py-btn--ghost sm" type="button" [attr.data-list-rename]="l.id" (click)="openRename(l)">Rename</button>
+                @if (l.archived) {
+                  <button class="py-btn py-btn--ghost sm" type="button" [attr.data-list-unarchive]="l.id" (click)="archive(l, false)">Unarchive</button>
+                } @else {
+                  <button class="py-btn py-btn--ghost sm" type="button" [attr.data-list-archive]="l.id" (click)="archive(l, true)">Archive</button>
+                }
+              </span>
+            }
+          </div>
+        }
+        @if (canCreate()) {
+          <div class="pop-f"><button class="py-btn py-btn--secondary sm" type="button" id="new-list" (click)="openNewList()"><py-icon name="plus" />New list</button></div>
+        }
+      </py-tv-popup>
+    }
+  }
+
+  <py-dialog [open]="!!dialog()" [label]="dialog()?.mode === 'new' ? 'New task list' : 'Rename task list'" (closed)="closeDialog()">
+    <form class="tk-dlg" novalidate (submit)="$event.preventDefault(); submitDialog()">
+      <h2>{{ dialog()?.mode === 'new' ? 'New task list' : 'Edit ' + dialog()?.list?.name }}</h2>
+      @if (dialog()?.mode === 'new') { <p class="lead">Lists group tasks, like Design or Build. Every project also has a General list.</p> }
+      <label class="py-field">
+        <span class="py-field__label">Name</span>
+        <span class="py-input-wrap"><input id="tl-name" name="name" autocomplete="off" placeholder="e.g. Build" maxlength="100" [value]="dialogName()" (input)="dialogName.set($any($event.target).value)" /></span>
+      </label>
+      <label class="py-field">
+        <span class="py-field__label">Visibility</span>
+        <select class="py-select" id="tl-vis" name="visibility" [value]="dialogVisibility()" (change)="dialogVisibility.set($any($event.target).value)">
+          <option value="INTERNAL">Internal</option>
+          <option value="EXTERNAL">External: visible to client users</option>
+        </select>
+      </label>
+      @if (dialogError(); as message) { <p class="py-field__error" role="alert" id="tl-error"><py-icon name="alert" />{{ message }}</p> }
+      <div class="tk-dlg-actions">
+        <button class="py-btn py-btn--secondary" type="button" (click)="closeDialog()">Cancel</button>
+        <button class="py-btn py-btn--primary" type="submit" id="tl-save" [disabled]="dialogBusy()">{{ dialog()?.mode === 'new' ? 'Create list' : 'Save' }}</button>
+      </div>
+    </form>
+  </py-dialog>
+}

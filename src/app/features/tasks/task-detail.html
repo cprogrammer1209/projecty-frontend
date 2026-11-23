@@ -1,0 +1,264 @@
+@if (missing()) {
+  <section class="panel">
+    <div class="not-found">
+      <b>Task not found</b><br />It doesn't exist, was moved to the trash, or you can't see it.<br /><br />
+      @if (!compact()) { <a class="py-btn py-btn--secondary" id="back-missing" [routerLink]="back().link" [queryParams]="back().query">Back to tasks</a> }
+    </div>
+  </section>
+} @else if (data(); as d) {
+  @let t = d.task;
+  @if (!compact()) {
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a id="back-link" [routerLink]="back().link" [queryParams]="back().query"><py-icon name="arrow-left" />{{ back().label }}</a>
+      @if (from()) {
+        <span aria-hidden="true">/</span>
+        <a id="crumb-project" [routerLink]="['/p', active.portal()?.slug, 'projects', id(), 'tasks']">{{ projectName() }}</a>
+      }
+      @if (parent(); as p) {
+        <span aria-hidden="true">/</span>
+        <a class="mono" id="crumb-parent" [routerLink]="['/p', active.portal()?.slug, 'projects', id(), 'tasks', p.id]" [queryParams]="keepFrom()" [title]="p.title">{{ p.key }}</a>
+      }
+    </nav>
+  }
+
+  @if (error(); as message) {
+    <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ message }}</span></div>
+  }
+  @if (notice(); as message) {
+    <div class="py-alert py-alert--ok" role="status" [attr.id]="compact() ? null : 'notice'"><py-icon name="check" /><span>{{ message }}</span></div>
+  }
+  @if (!t.canEdit) {
+    <div class="py-alert" role="status" id="readonly-note"><py-icon name="alert" /><span>You can read this task, but you do not have permission to change it.</span></div>
+  }
+
+  <div class="td-main">
+    <div class="td-center">
+      <div class="td-head">
+        <div class="ov-key">
+          <span class="key" id="t-key">{{ t.key }}</span>
+          <span class="st-chip" id="t-status" [class.closed]="t.statusType === 'CLOSED'" [style.--c]="t.statusColor ?? '#6b7280'"><i aria-hidden="true"></i>{{ t.statusName }}</span>
+          <span class="chip-vis" title="The task layout decides the statuses and extra fields"><py-icon name="layers" />{{ d.layout.name }}</span>
+          @if (t.depth > 1) { <span class="chip-vis">Subtask, level {{ t.depth }}</span> }
+          <span class="grow"></span>
+          <button class="py-btn py-btn--ghost sm" type="button" id="follow" [attr.aria-pressed]="following()" (click)="toggleFollow()">{{ following() ? 'Unfollow' : 'Follow' }}</button>
+          @if (t.canDelete) {
+            <button class="py-btn py-btn--ghost sm danger" type="button" id="trash" (click)="confirmTrash.set(true)"><py-icon name="trash" />Delete</button>
+          }
+        </div>
+        @if (editTitle() && canEdit()) {
+          <input class="t-title-input" id="title-input" pyAutofocus aria-label="Task title" maxlength="200" [value]="titleDraft()"
+                 (input)="titleDraft.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); saveTitle()" (keydown.escape)="$event.stopPropagation(); cancelTitle()" (blur)="saveTitle()" />
+          @if (titleError(); as message) { <p class="py-field__error"><py-icon name="alert" />{{ message }}</p> }
+        } @else if (canEdit()) {
+          <h1 class="t-title"><button type="button" class="t-title-btn" id="title-btn" title="Click to edit the title" (click)="startTitle()">{{ t.title }}</button></h1>
+        } @else {
+          <h1 class="t-title">{{ t.title }}</h1>
+        }
+        <p class="td-meta">Created by {{ personName(t.createdBy) }} · {{ t.createdAt | pyDate: dateTimePattern() }}@if (t.closedAt) { · Closed {{ t.closedAt | pyDate: dateTimePattern() }} }</p>
+      </div>
+
+      @if (compact()) { <aside class="td-side in-peek"><ng-container *ngTemplateOutlet="props" /></aside> }
+
+      <div class="cf-props td-desc" id="t-desc">
+        <py-property-list [fields]="descriptionFields" [values]="descriptionValues()" [people]="people.activeMembers()" [canEdit]="canEdit()" [save]="saveDescription" />
+      </div>
+
+      <section class="td-sec" id="subtasks">
+        <h2>
+          Sub-tasks
+          @if (d.subtasks.length) {
+            <span class="muted">{{ subtasksClosed() }}/{{ d.subtasks.length }}</span>
+            <span class="prog" [title]="subtasksClosed() + ' of ' + d.subtasks.length + ' closed'"><i [style.width.%]="(subtasksClosed() / d.subtasks.length) * 100"></i></span>
+          }
+        </h2>
+        @if (subtaskRows().length) {
+          <ul class="sublist">
+            @for (r of subtaskRows(); track r.task.id) {
+              <li class="srow2" [class.done]="r.task.statusType === 'CLOSED'" [style.--lv]="r.level">
+                <a class="sublink" [routerLink]="['/p', active.portal()?.slug, 'projects', id(), 'tasks', r.task.id]" [queryParams]="keepFrom()" (click)="subLink($event, r.task.id)">
+                  <span class="si" [title]="r.task.statusName"><py-tv-glyph [icon]="statusIcon(r.task)" /></span>
+                  <span class="mono">{{ r.task.key }}</span><span class="tt">{{ r.task.title }}</span>
+                  @if (r.task.subtaskCount) { <span class="subc"><py-tv-icon n="sub" [size]="11" />{{ r.task.completedSubtaskCount }}/{{ r.task.subtaskCount }}</span> }
+                </a>
+                <span class="so"><py-tv-owners [names]="ownerNames(r.task)" [size]="18" /></span>
+                <span class="so due-s">@if (r.task.dueDate) { <span class="due" [class.over]="isOverdue(r.task)">{{ r.task.dueDate | pyDay }}</span> }</span>
+              </li>
+            }
+          </ul>
+        }
+        @if (t.canEdit && active.can('TASKS_CREATE')) {
+          @if (t.depth >= 5) {
+            <p class="hint">Subtasks go 5 levels deep at most. Add the next task one level up.</p>
+          } @else {
+            <form class="qadd" id="sub-add" novalidate (submit)="$event.preventDefault(); addSubtask(si)">
+              <span class="plus" aria-hidden="true"><py-tv-icon n="plus" [size]="13" /></span>
+              <input #si type="text" name="title" placeholder="Add a sub-task and press Enter" aria-label="Add a subtask" maxlength="200" autocomplete="off" [disabled]="subBusy()" />
+              @if (subError(); as message) { <p class="py-field__error"><py-icon name="alert" />{{ message }}</p> }
+            </form>
+          }
+        }
+      </section>
+
+      <section class="td-sec" id="discussion">
+        <h2>Activity</h2>
+        <ul class="tl" id="activity">
+          @for (e of timeline(); track e.a?.id ?? e.c?.id) {
+            @if (e.a; as a) {
+              <li class="ev">
+                <py-tv-glyph [icon]="{ k: 'person', name: a.actorName ?? personName(a.actorUserId) }" [size]="18" />
+                <span class="evt">
+                  <strong>{{ a.actorName ?? personName(a.actorUserId) }}</strong>
+                  @if (a.action === 'TASK_UPDATED' || a.action === 'TASK_STATUS_CHANGED') {
+                    changed <b>{{ fieldLabel(a.field ?? '') }}</b> from {{ activityValue(a.field ?? '', a.oldValue) }} to <b>{{ activityValue(a.field ?? '', a.newValue) }}</b>
+                  } @else {
+                    {{ activityLabel(a) }}@if (a.detail) { <span class="muted">: {{ a.detail }}</span> }
+                  }
+                </span>
+                <small class="when">{{ a.createdAt | pyDate: dateTimePattern() }}</small>
+              </li>
+            }
+            @if (e.c; as c) {
+              <li class="cmt" [attr.data-comment]="c.id">
+                <py-tv-glyph [icon]="{ k: 'person', name: c.authorName ?? personName(c.authorUserId) }" [size]="22" />
+                <div class="cb">
+                  <div class="ch">
+                    <strong>{{ c.authorName ?? personName(c.authorUserId) }}</strong>
+                    <small>{{ c.createdAt | pyDate: dateTimePattern() }}@if (c.edited) { · <span class="edited">edited</span> }</small>
+                    @if (c.canEdit || c.canDelete) {
+                      <span class="cacts">
+                        @if (c.canEdit) { <button class="py-btn py-btn--ghost sm" type="button" [attr.data-cedit]="c.id" (click)="startEditComment(c)">Edit</button> }
+                        @if (c.canDelete) { <button class="py-btn py-btn--ghost sm danger" type="button" [attr.data-cdel]="c.id" (click)="deleteComment.set(c)">Delete</button> }
+                      </span>
+                    }
+                  </div>
+                  @if (editingComment() === c.id) {
+                    <textarea class="py-textarea" id="edit-comment" rows="3" pyAutofocus aria-label="Edit comment" [value]="editText()" (input)="editText.set($any($event.target).value)"></textarea>
+                    @if (editError(); as message) { <p class="py-field__error"><py-icon name="alert" />{{ message }}</p> }
+                    <div class="cform-acts">
+                      <button class="py-btn py-btn--primary" type="button" id="save-comment" (click)="saveComment()">Save</button>
+                      <button class="py-btn py-btn--ghost" type="button" id="cancel-comment" (click)="editingComment.set(null)">Cancel</button>
+                    </div>
+                  } @else {
+                    <p class="cbody">{{ c.body }}</p>
+                  }
+                </div>
+              </li>
+            }
+          }
+        </ul>
+        <form class="cbox" id="comment-form" novalidate (submit)="$event.preventDefault(); addComment()">
+          <textarea class="py-textarea" id="new-comment" rows="2" placeholder="Leave a comment…" aria-label="New comment" [value]="commentText()"
+                    (input)="commentText.set($any($event.target).value)" (keydown.control.enter)="$event.preventDefault(); addComment()" (keydown.meta.enter)="$event.preventDefault(); addComment()"></textarea>
+          @if (commentError(); as message) { <p class="py-field__error"><py-icon name="alert" />{{ message }}</p> }
+          <div class="cform-acts"><span class="cbox-hint">Ctrl+Enter to send</span><button class="py-btn py-btn--primary" type="submit" id="add-comment" [disabled]="commentBusy()">Comment</button></div>
+        </form>
+      </section>
+      @if (compact()) { <aside class="td-side in-peek meta"><ng-container *ngTemplateOutlet="meta" /></aside> }
+    </div>
+    @if (!compact()) { <aside class="td-side"><ng-container *ngTemplateOutlet="props" /><ng-container *ngTemplateOutlet="meta" /></aside> }
+  </div>
+
+  <ng-template #props>
+    <h4>Properties</h4>
+    <div class="cf-props one" id="t-core">
+      <py-property-list [fields]="coreFields()" [values]="coreValues()" [people]="people.activeMembers()" [canEdit]="canEdit()" [save]="saveCore" />
+    </div>
+    @for (sec of sections(); track sec.id) {
+      <div class="custom-section">
+        <h4>{{ sec.name }}</h4>
+        <div class="cf-props one">
+          <py-property-list [fields]="sec.fields" [values]="t.customValues" [people]="people.activeMembers()" [canEdit]="canEdit()" [save]="saveCustom" />
+        </div>
+      </div>
+    }
+    @if (hiddenKeys().length) {
+      <p class="hint hidden-note" id="hidden-note">
+        Kept but not shown by this layout:
+        @for (k of hiddenKeys(); track k) { {{ fieldLabel('customValues.' + k) }}{{ $last ? '' : ',' }} }.
+      </p>
+    }
+  </ng-template>
+
+  <ng-template #meta>
+    <h4>Tags</h4>
+    <div class="tags-box" id="tags">
+      <span class="tagrow">
+        @for (tag of t.tags; track tag) {
+          <span class="tag lg">{{ tag }}@if (t.canEdit) { <button type="button" class="tag-x" [attr.data-tag-del]="tag" [attr.aria-label]="'Remove tag ' + tag" (click)="removeTag(tag)">✕</button> }</span>
+        } @empty {
+          <span class="muted">No tags</span>
+        }
+      </span>
+      @if (t.canEdit) {
+        <form id="tag-form" novalidate (submit)="$event.preventDefault(); addTag(ti)">
+          <input #ti type="text" name="tag" list="tag-list" placeholder="Add a tag" aria-label="Add a tag" maxlength="35" autocomplete="off" />
+          <datalist id="tag-list">@for (x of freeTags(); track x) { <option [value]="x"></option> }</datalist>
+        </form>
+        @if (tagError(); as message) { <p class="py-field__error"><py-icon name="alert" />{{ message }}</p> }
+      }
+    </div>
+    <h4>Followers <span class="muted">{{ d.followers.length }} {{ d.followers.length === 1 ? 'person' : 'people' }}</span></h4>
+    <ul class="followers" id="followers">
+      @for (f of d.followers; track f) {
+        <li>
+          <py-tv-glyph [icon]="{ k: 'person', name: personName(f) }" [size]="20" />
+          <span class="fn">{{ personName(f) }}@if (f === me()?.id) { <span class="you"> (you)</span> }</span>
+          @if (t.canEdit || f === me()?.id) {
+            <button class="icon-x" type="button" [attr.data-unfollow]="f" [attr.aria-label]="'Remove ' + personName(f) + ' from followers'" title="Remove" (click)="removeFollower(f)">✕</button>
+          }
+        </li>
+      } @empty {
+        <li class="muted">Nobody follows this task.</li>
+      }
+    </ul>
+    @if (t.canEdit && freePeople().length) {
+      <div class="add-member">
+        <select class="py-select" id="add-follower" aria-label="Add a follower" (change)="addFollower($any($event.target).value); $any($event.target).value = ''">
+          <option value="">Add a follower…</option>
+          @for (p of freePeople(); track p.userId) { <option [value]="p.userId">{{ p.fullName }}</option> }
+        </select>
+      </div>
+    }
+  </ng-template>
+
+  <py-dialog [open]="confirmTrash()" label="Delete task" (closed)="confirmTrash.set(false)">
+    <div class="tk-dlg">
+      <h2>Delete {{ t.key }}?</h2>
+      <p class="lead">{{ d.subtasks.length ? 'It moves to the trash with its ' + d.subtasks.length + ' subtask' + (d.subtasks.length === 1 ? '' : 's') + '. ' : 'It moves to the trash. ' }}Restore it from the project's Tasks → Trash.</p>
+      <div class="tk-dlg-actions">
+        <button class="py-btn py-btn--secondary" type="button" (click)="confirmTrash.set(false)">Cancel</button>
+        <button class="py-btn py-btn--danger" type="button" id="confirm-trash" [disabled]="busy()" (click)="moveToTrash()">Move to trash</button>
+      </div>
+    </div>
+  </py-dialog>
+
+  <py-dialog [open]="!!deleteComment()" label="Delete comment" (closed)="deleteComment.set(null)">
+    <div class="tk-dlg">
+      <h2>Delete this comment?</h2>
+      <p class="lead">This removes the comment for everyone.</p>
+      <div class="tk-dlg-actions">
+        <button class="py-btn py-btn--secondary" type="button" (click)="deleteComment.set(null)">Cancel</button>
+        <button class="py-btn py-btn--danger" type="button" id="confirm-delete-comment" (click)="removeComment()">Delete comment</button>
+      </div>
+    </div>
+  </py-dialog>
+
+  <py-dialog [open]="!!closeAsk()" label="Close task" (closed)="answerClose(false)">
+    @if (closeAsk(); as q) {
+      <div class="tk-dlg">
+        <h2>Close {{ q.key }}?</h2>
+        <p class="lead">It still has {{ q.open }} open subtask{{ q.open === 1 ? '' : 's' }}. They stay open if you close it.</p>
+        <div class="tk-dlg-actions">
+          <button class="py-btn py-btn--secondary" type="button" (click)="answerClose(false)">Cancel</button>
+          <button class="py-btn py-btn--primary" type="button" id="confirm-close" (click)="answerClose(true)">Close it anyway</button>
+        </div>
+      </div>
+    }
+  </py-dialog>
+} @else if (error()) {
+  <div class="py-alert" role="alert"><py-icon name="alert" /><span>{{ error() }}</span></div>
+} @else {
+  <p class="py-caption">Loading task…</p>
+}
+
+@if (palette()) { <py-tv-palette (closed)="palette.set(false)" /> }

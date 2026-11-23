@@ -4,6 +4,7 @@ import { ActivatedRouteSnapshot, Data, NavigationEnd, Router, RouterLink, Router
 import { filter, map, tap } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { Permission } from '../../core/member/member.api';
 import { ActivePortalService } from '../../core/portal/active-portal.service';
 import { ThemeService } from '../../core/theme/theme.service';
 import { Icon } from '../../shared/ui/icon/icon';
@@ -12,10 +13,11 @@ import { initials } from '../auth/text';
 /**
  * Work sections (M1). Those with a `route` are built; the rest are shown so the layout is complete, but disabled.
  */
-const COMING_LATER: { icon: string; label: string; route?: string }[] = [
+const COMING_LATER: { icon: string; label: string; route?: string; permission?: Permission }[] = [
   { icon: 'user', label: 'My Work' },
   { icon: 'inbox', label: 'Inbox' },
   { icon: 'folder', label: 'Projects', route: 'projects' },
+  { icon: 'check', label: 'Tasks', route: 'tasks', permission: 'TASKS_VIEW' },
   { icon: 'layers', label: 'Portfolio' },
   { icon: 'chart', label: 'Reports' },
 ];

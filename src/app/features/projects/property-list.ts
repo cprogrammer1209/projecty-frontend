@@ -11,7 +11,7 @@ import { Autofocus } from './autofocus';
 import { Calendar } from './calendar';
 
 /** Saves one answer. Rejects with an Error whose message is shown under the value. `optimistic` answers already show. */
-export type SaveValue = (apiName: string, value: unknown, optimistic: boolean) => Promise<void>;
+export type SaveValue = (apiName: string, value: unknown, optimistic: boolean) => Promise<void | false>;
 
 interface Choice {
   id: string;
@@ -194,8 +194,9 @@ export class PropertyList {
     if (optimistic) this.editing.set(null);
     this.saving = true;
     try {
-      await this.save()(k, value, optimistic);
+      const saved = await this.save()(k, value, optimistic);
       this.editing.set(null);
+      if (saved === false) return; // the person took it back (a question was answered No)
       this.flash.set(k);
       setTimeout(() => {
         if (this.flash() === k) this.flash.set(null);

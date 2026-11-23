@@ -1,8 +1,8 @@
 <header class="ph">
   <div>
-    <div class="crumb">Projects</div>
+    <div class="crumb">{{ entity.title }}</div>
     <h1>Layouts</h1>
-    <p>Layouts decide which fields appear on the project form, and how they are grouped.</p>
+    <p>Layouts decide which fields appear on the {{ entity.noun }} form, and how they are grouped.</p>
   </div>
   @if (canManage) {
     <button class="btn primary" type="button" (click)="openDialog()"><py-icon name="plus" /> New layout</button>
@@ -52,13 +52,13 @@
   </div>
   <div class="d">{{ l.description || 'No description' }}</div>
   <div class="m">
-    {{ plural(l.sectionCount, 'section') }} · {{ plural(l.fieldCount, 'field') }} · Used by {{ plural(l.usage, 'project') }}
+    {{ plural(l.sectionCount, 'section') }} · {{ plural(l.fieldCount, 'field') }} · Used by {{ plural(l.usage, entity.noun) }}
   </div>
 </ng-template>
 
 <p class="foot">
   {{ items()?.length ?? 0 }} of {{ max }} layouts. Layouts are deactivated, never deleted. A field that isn't in a
-  project's layout is hidden for that project, and its answer is kept.
+  {{ entity.noun }}'s layout is hidden for that {{ entity.noun }}, and its answer is kept.
 </p>
 @if (!canManage) {
   <p class="foot">Only Admins can add or change layouts.</p>

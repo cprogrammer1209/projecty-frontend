@@ -25,7 +25,7 @@ import { ThemeService } from '../../../core/theme/theme.service';
 import { SaveBarService } from '../../../core/ui/save-bar.service';
 import { ToastService } from '../../../core/ui/toast.service';
 import { Icon } from '../../../shared/ui/icon/icon';
-import { PORTAL_PAGES, PROJECT_PAGES, SOON_MODULES } from './settings-nav';
+import { PORTAL_PAGES, PROJECT_PAGES, SOON_MODULES, TASK_PAGES } from './settings-nav';
 
 interface PaletteEntry {
   label: string;
@@ -94,6 +94,10 @@ export class SettingsShell {
     PROJECT_PAGES.filter((p) => !p.permission || this.portal.can(p.permission)),
   );
 
+  protected readonly taskPages = computed(() =>
+    TASK_PAGES.filter((p) => !p.permission || this.portal.can(p.permission)),
+  );
+
   protected readonly page = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
@@ -117,6 +121,12 @@ export class SettingsShell {
         label: 'Projects › ' + p.label,
         hint: 'Projects',
         url: `${base}projects/${p.id}`,
+        icon: p.icon,
+      })),
+      ...this.taskPages().map((p) => ({
+        label: 'Tasks › ' + p.label,
+        hint: 'Tasks',
+        url: `${base}tasks/${p.id}`,
         icon: p.icon,
       })),
       ...SOON_MODULES.map((m) => ({ label: m.name, hint: 'Soon', url: base + m.id, icon: m.id })),

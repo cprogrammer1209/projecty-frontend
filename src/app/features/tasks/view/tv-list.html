@@ -1,0 +1,31 @@
+<div class="tlist" id="tv-list">
+  @for (g of store.groups(); track g.id) {
+    @let key = store.groupKey();
+    @let shut = !!store.state.fold()[key + ':' + g.id];
+    <section class="tgroup" [class.archived]="g.list?.archived" [attr.data-group]="g.id" [attr.data-list]="g.list?.id ?? ''" [attr.aria-label]="g.label">
+      <div class="gh" [class.fold]="shut" [attr.data-group-id]="g.id" [attr.data-gkey]="key">
+        <button type="button" class="gtoggle" [attr.data-fold]="key + ':' + g.id" [attr.aria-expanded]="!shut" [attr.aria-label]="(shut ? 'Expand ' : 'Collapse ') + g.label" (click)="store.toggleFold(key + ':' + g.id)">
+          <span class="car"><py-tv-icon n="car" [size]="12" /></span>
+        </button>
+        @if (store.groupIcon(g, key); as ic) { <py-tv-glyph [icon]="ic" [size]="key === 'owner' ? 16 : 14" /> }
+        <span class="gname">{{ g.label }}</span><span class="gcount cnt">{{ g.items.length }}</span>
+        @if (g.list; as l) {
+          @if (l.visibility === 'EXTERNAL') { <span class="chip">External</span> }
+          @if (l.archived) { <span class="chip">Archived</span> }
+        }
+        <span class="sp"></span>
+        @if (store.canCreateAny() && !g.list?.archived) {
+          <button type="button" class="ibtn gplus" [attr.data-qa]="g.id" [attr.aria-label]="'Add a task to ' + g.label" title="Add a task" (click)="store.openQuickAdd(g.id)"><py-tv-icon n="plus" /></button>
+        }
+      </div>
+      @if (!shut) {
+        @for (t of g.items; track t.id) { <div [tvRow]="t"></div> }
+        @if (!g.items.length) { <div class="tempty">{{ store.filtered() ? 'No tasks match the filters.' : 'No tasks here yet.' }}</div> }
+        @if (store.quickAdd()?.gid === g.id) { <form [tvQuickAdd]="g.id" [attr.data-add]="g.id"></form> }
+      }
+    </section>
+  }
+  @if (store.canCreateAny()) {
+    <button type="button" class="qrow" id="new-row" (click)="store.openNew()"><py-tv-icon n="plus" />New task <span class="kbd">C</span></button>
+  }
+</div>

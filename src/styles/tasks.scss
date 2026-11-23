@@ -1,0 +1,7 @@
+/* Tasks: the shared task view (project Tasks tab, portal My Tasks / All Tasks) and the task page, ported from
+   prototype/m1/step6-tasks/css/tasks.css. Global because the pages share the projects pages' look (panels, headings,
+   tables) without sharing component styles. One partial per concern. */
+@use './tasks/chrome';
+@use './tasks/view';
+@use './tasks/popups';
+@use './tasks/detail';
