@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/frontend/browser",
+  "rewrites": [
+    { "source": "/api/work/:path*", "destination": "https://REPLACE-WITH-CODESPACE-NAME-8082.app.github.dev/api/work/:path*" },
+    { "source": "/api/:path*", "destination": "https://REPLACE-WITH-CODESPACE-NAME-8081.app.github.dev/api/:path*" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

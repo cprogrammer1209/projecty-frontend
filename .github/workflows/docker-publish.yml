@@ -1,0 +1,41 @@
+name: Docker publish
+
+# A merge into PROJECTY_PRODUCTION builds the image and pushes it to Docker Hub.
+# A pull request into PROJECTY_PRODUCTION only builds it, so a broken image is caught before the merge.
+on:
+  push:
+    branches: [PROJECTY_PRODUCTION]
+  pull_request:
+    branches: [PROJECTY_PRODUCTION]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/projecty-frontend
+          tags: |
+            type=raw,value=production
+            type=sha,format=long
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
